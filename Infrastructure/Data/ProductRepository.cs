@@ -33,9 +33,9 @@ namespace Infrastructure.Data
 
 
 
-        public async Task<IReadOnlyList<Product>> GetProductsAsync(string? brand, string? type, string? sort)
+        public async Task<IReadOnlyList<Product>> GetProductsAsync(string? brand, string? type, string? sort)   //api/products?sort=priceAsc
         {
-            var query = context.Products.AsQueryable();     //// defers DB execution — allows conditional query building before hitting the database
+            var query = context.Products.AsQueryable();     // defers DB execution — allows conditional query building before hitting the database
 
             if (!string.IsNullOrWhiteSpace(brand))
             {
@@ -62,7 +62,7 @@ namespace Infrastructure.Data
 
         public async Task<IReadOnlyList<string>> GetBrandsAsync()
         {
-            return await context.Products.Select(x => x.Brand)      //Maps each Product object to one of its properties, transforming a collection of objects into strings or values
+            return await context.Products.Select(x => x.Brand)     //Projection - Maps each Product object to one of its properties, transforming a collection of objects into strings or values
                 .Distinct()     //Removes duplicates.
                 .ToListAsync();
 

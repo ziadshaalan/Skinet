@@ -1,0 +1,88 @@
+﻿using Core.Entities;
+using Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Infrastructure.Data
+{
+    public class GenericRepository<T>(StoreContext context) : IGenericRepository<T> where T : BaseEntity    //Constraint where only entities have primary keys
+    {
+        public void Add(T entity)
+        {
+            context.Set<T>().Add(entity);
+        }
+        
+        public async Task<T?> GetByIdAsync(int id)
+        {
+            return await context.Set<T>().FindAsync(id);
+        }
+
+        public async Task<IReadOnlyList<T>> ListAllAsync()
+        {
+            return await context.Set<T>().ToListAsync();
+        }
+
+        public void Remove(T entity)
+        {
+            context.Set<T>().Remove(entity);
+        }
+
+        public async Task<bool> SaveAllAsync()
+        {
+            return await context.SaveChangesAsync() > 0;
+        }
+
+        public void Update(T entity)
+        {
+            context.Set<T>().Attach(entity);
+            context.Entry(entity).State = EntityState.Modified;
+        }
+        public bool Exists(int id)
+        {
+            return context.Set<T>().Any(x => x.Id == id);
+        }
+
+        public async Task<T?> GetEntityWithSpec(ISpecification<T> spec)
+        {
+            return await ApplySpecification(spec).FirstOrDefaultAsync();
+        }
+        public async Task<TResult?> GetEntityWithSpec<TResult>(ISpecification<T, TResult> spec)
+        {
+            return await ApplySpecification(spec).FirstOrDefaultAsync<TResult>();
+        }
+
+        public async Task<IReadOnlyList<T>> ListAsync(ISpecification<T> spec)
+        {
+            return await ApplySpecification(spec).ToListAsync();
+        }
+
+        // Overload for projection specs — returns list of TResult instead of List<T>
+        public async Task<IReadOnlyList<TResult>> ListAsync<TResult>(ISpecification<T, TResult> spec)
+        {
+            return await ApplySpecification(spec).ToListAsync<TResult>();
+        }
+
+
+
+        // Original — returns IQueryable<T>, used for standard specs
+
+        private IQueryable<T> ApplySpecification(ISpecification<T> spec)
+        {
+            return SpecificationEvaluator<T>.GetQuery(context.Set<T>(), spec);
+        }
+
+        // Overload — returns IQueryable<TResult>, used when Select projection exists
+        private IQueryable<TResult> ApplySpecification<TResult>(ISpecification<T, TResult> spec)
+        {
+            return SpecificationEvaluator<T>.GetQuery<T, TResult>(context.Set<T>(), spec);
+        }
+
+
+
+
+    }
+}
