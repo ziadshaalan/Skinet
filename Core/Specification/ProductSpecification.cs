@@ -10,13 +10,18 @@ namespace Core.Specification
     public class ProductSpecification : BaseSpecification<Product>
     {
         //brand and type = WHERE clause — must be passed to BaseSpecification via : base() because that's the only way to set Criteria which lives in BaseSpecification.
-        public ProductSpecification(string? brand, string? type, string? sort) : base(x =>
-        (string.IsNullOrWhiteSpace(brand) || x.Brand == brand) &&
-        (string.IsNullOrWhiteSpace(type) || x.Type == type)
+        public ProductSpecification( ProductSpecParams productParams) : base(x =>
+        (string.IsNullOrEmpty(productParams.Search) || x.Name.ToLower().Contains(productParams.Search)) &&
+        (!productParams.Brands.Any() || productParams.Brands.Contains(x.Brand)) &&    //Contains() checks: "Is this product's brand inside the list the user requested?"
+        (!productParams.Types.Any() || productParams.Types.Contains(x.Type))          // If no brands requested !Any() = true, which include all products in this case
         )
         //sort = ORDER BY — uses AddOrderBy() which is a protected method in BaseSpecification.Protected methods can only be called from the constructor body, not from : base().
         {
-            switch (sort)
+
+            ApplyPaging(productParams.PageSize * (productParams.PageIndex - 1), productParams.PageSize);
+
+
+            switch (productParams.Sort)
             {
                 case "priceAsc":
                     AddOrderBy(x => x.Price);

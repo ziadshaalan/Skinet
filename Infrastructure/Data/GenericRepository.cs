@@ -60,6 +60,15 @@ namespace Infrastructure.Data
             return await ApplySpecification(spec).ToListAsync();
         }
 
+        public async Task<int> CountAsync(ISpecification<T> spec)
+        {
+            var query = context.Set<T>().AsQueryable();
+
+            query = spec.ApplyCriteria(query);
+
+            return await query.CountAsync();
+        }
+
         // Overload for projection specs — returns list of TResult instead of List<T>
         public async Task<IReadOnlyList<TResult>> ListAsync<TResult>(ISpecification<T, TResult> spec)
         {
@@ -81,8 +90,6 @@ namespace Infrastructure.Data
             return SpecificationEvaluator<T>.GetQuery<T, TResult>(context.Set<T>(), spec);
         }
 
-
-
-
+       
     }
 }

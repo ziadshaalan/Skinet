@@ -20,11 +20,27 @@ namespace Core.Specification
 
         public Expression<Func<T, bool>>? Criteria => criteria;
 
-        public Expression<Func<T, object>> OrderBy { get; private set; }
+        public Expression<Func<T, object>>? OrderBy { get; private set; }
 
-        public Expression<Func<T, object>> OrderByDescending { get; private set; }
+        public Expression<Func<T, object>>? OrderByDescending { get; private set; }
 
         public bool IsDistinct {  get; private set; }
+
+        public int Take { get; private set; }
+
+        public int Skip { get; private set; }
+
+        public bool IsPagingEnabled {  get; private set; }
+
+        public IQueryable<T> ApplyCriteria(IQueryable<T> query)
+        {
+            if (Criteria != null)
+            {
+                query = query.Where(Criteria);
+            }
+            return query;
+
+        }
 
         protected void AddOrderBy(Expression<Func<T, object>> orderByExpression)    // Protected - access modifier that restricts access to a class member to its containing class and any derived classes
         {
@@ -40,6 +56,14 @@ namespace Core.Specification
         {
             IsDistinct = true;
         }
+
+        protected void ApplyPaging(int skip, int take)
+        {
+            Take = take;
+            Skip = skip;
+            IsPagingEnabled = true;
+        }
+       
 
     }
 

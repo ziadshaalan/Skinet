@@ -1,4 +1,5 @@
-﻿using Core.Entities;
+﻿using API.RequestHelpers;
+using Core.Entities;
 using Core.Interfaces;
 using Core.Specification;
 using Infrastructure.Data;
@@ -9,21 +10,18 @@ using Microsoft.EntityFrameworkCore;
 namespace API.Controllers
 {
 
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ProductsController(IGenericRepository<Product> repo) : ControllerBase
+   
+    public class ProductsController(IGenericRepository<Product> repo) : BaseApiController
     {
         
         [HttpGet]
-        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(string? brand,
-            string? type, string? sort)                                // IReadOnlyList has Count, index access [i], and data is fully loaded in memory upfront
-                                                                       // IEnumerable — no Count, no index access, data loads lazily only when iterated
+        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts([FromQuery]ProductSpecParams productParams)
+        // IReadOnlyList has Count, index access [i], and data is fully loaded in memory upfront
+        // IEnumerable — no Count, no index access, data loads lazily only when iterated
         {
-             var spec = new ProductSpecification(brand, type, sort);
-            var products = await repo.ListAsync(spec);
+            var spec = new ProductSpecification(productParams);
 
-
-            return Ok(products);  //requires Ok() because ActionResult<T> has no implicit conversion for collections
+            return await CreatePagedResult(repo, spec, productParams.PageSize, productParams.PageIndex);
         }
 
         [HttpGet("{id:int}")]   //   api/products/2
