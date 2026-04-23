@@ -5,6 +5,9 @@ using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+//contract for data access using specifications
+//controllers depend on an interface, not EF Core directly (cleaner dependency injection)
+
 
 namespace Core.Interfaces
 {

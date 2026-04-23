@@ -6,6 +6,10 @@ using Infrastructure.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+// controller should stay thin 
+// easier to read and test
+// business/query logic is not mixed with HTTP concerns
+//delegates query-building to the specification layer
 
 namespace API.Controllers
 {

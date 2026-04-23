@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+//defines product query rules from those params
+//delegates query-building to the specification layer
+//Contains: filters by name, brand, and type, sorts by price or name, and paging
+
 
 namespace Core.Specification
 {

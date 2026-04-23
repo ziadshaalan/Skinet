@@ -8,6 +8,8 @@ using System.Linq.Expressions;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+//So it acts like a reusable base class for building query definitions.
+
 
 namespace Core.Specification
 {

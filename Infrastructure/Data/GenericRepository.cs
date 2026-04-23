@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+//executes the spec-based query with EF Core
+
 
 namespace Infrastructure.Data
 {
@@ -60,6 +62,8 @@ namespace Infrastructure.Data
             return await ApplySpecification(spec).ToListAsync();
         }
 
+
+//CountAsync intentionally applies only the Criteria, not paging/sorting, because total count should represent all matches, not only the current page.
         public async Task<int> CountAsync(ISpecification<T> spec)
         {
             var query = context.Set<T>().AsQueryable();

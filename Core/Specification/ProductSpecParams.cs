@@ -4,6 +4,9 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+// request DTO for query-string parameters
+// normalizes incoming values
+// separates query logic from controller logic
 
 namespace Core.Specification
 {
