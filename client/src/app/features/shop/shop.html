@@ -1,0 +1,75 @@
+<div class="flex flex-col gap-3">
+  <div class="flex justify-between">
+    <div>
+       <!--(page)="handlePageEvent($event)" listens to paginator event and sends PageEvent to component -->
+      <mat-paginator
+      (page)="handlePageEvent($event)"  
+      [pageIndex]="shopParams.pageNumber - 1"
+      [pageSize]="shopParams.pageSize"
+      [length]="products?.count"
+      [pageSizeOptions]="pageSizeOptions"
+      [showFirstLastButtons]="true"
+      aria-label="Select page"
+      >
+
+      </mat-paginator>
+    </div>
+
+   <div>
+  <form #searchForm="ngForm" class="relative flex items-center w-full max-w-md mx-4">
+    <!-- removed (ngSubmit) — form no longer triggers search on Enter/button click -->
+    <input 
+        type="search"
+        class="block w-full p-3 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:border-blue-500"
+        placeholder="Search" 
+        name="search"
+        [(ngModel)]="shopParams.search"
+        (ngModelChange)="onSearchChange()" />
+        <!-- (ngModelChange) — fires onSearchChange() on every keystroke instead of form submit -->
+          <!-- type changed from "submit" to "button" — no longer submits the form -->
+    <button mat-icon-button type="button"
+        class="absolute inset-y-0 right-8 top-2 flex items-center pl-3">
+      <mat-icon class="text-gray-500">search</mat-icon>
+    </button>
+  </form>
+</div>
+
+    <div class="flex gap-3">
+      <button mat-stroked-button (click)="openFiltersDialog()">
+      <mat-icon>filter_list</mat-icon>
+      Filters
+    </button>
+<!-- Button that opens the menu -->
+<!-- [matMenuTriggerFor] links this button to #sortMenu below -->
+    <button mat-stroked-button [matMenuTriggerFor]="sortMenu">
+      <mat-icon>swap_vert</mat-icon> 
+      Sort
+    </button>
+    </div>
+    
+  </div>
+  <div>
+    
+  </div>
+
+  <div class="grid grid-cols-5 gap-4 ">
+    @for (product of products?.data; track product.id) {
+      <app-product-item [product]="product"></app-product-item>
+    }
+</div>
+</div>
+<!--(#) is a template reference variable — it gives a name to an element so you can reference it elsewhere in the same template.-->
+<mat-menu #sortMenu = "matMenu">  
+  <mat-selection-list [multiple]="false"  #sortList (selectionChange)="onSortChange($event)">
+    @for (sort of sortOptions; track $index) {
+      <!-- [value]="sort.value" = what gets stored when selected -->
+      <!-- [selected]="selectedSort === sort.value" = pre-checks the active option -->
+      <mat-list-option [value]="sort.value" [selected]="this.shopParams.sort === sort.value">
+        {{sort.name}}
+      </mat-list-option>
+    }
+  </mat-selection-list>
+
+</mat-menu>
+
+ 
