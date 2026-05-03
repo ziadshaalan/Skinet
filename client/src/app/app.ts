@@ -13,7 +13,7 @@ import { Shop } from './features/shop/shop';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header, Shop],
+  imports: [RouterOutlet, Header,],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

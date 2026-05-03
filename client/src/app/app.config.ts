@@ -10,7 +10,10 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
-    provideZoneChangeDetection(),  /// Uses zone.js for change detection (traditional approach), instead of signal(Newer version of angular) 
+    provideZoneChangeDetection(),  /// Uses zone.js for change detection"Notices any change in component and apply it to template to render it"" (traditional approach), instead of signal(Newer version of angular) 
+//  Without it:  
+// this.products = response.data  // products updated
+// but UI still shows old products — Angular doesn't know to re-render
     provideHttpClient()
   ]
 };

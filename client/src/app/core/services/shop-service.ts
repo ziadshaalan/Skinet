@@ -41,6 +41,12 @@ export class ShopService {
         
     return this.http.get<Pagination<Product>>(this.baseUrl + 'products', {params})
     }
+
+    getProduct(id: number){
+      return this.http.get<Product>(this.baseUrl + 'products/' + id)
+    }
+
+
     getBrands() {
       if (this.brands.length > 0 ) return  // if already have data, skip the API call. 
       return this.http.get<string[]>(this.baseUrl + 'products/brands').subscribe({
