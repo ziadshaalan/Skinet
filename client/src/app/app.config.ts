@@ -4,7 +4,9 @@ import 'zone.js'
 
 
 import { routes } from './app.routes';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { errorInterceptor } from './core/interceptors/error-interceptor';
+import { loadingInterceptor } from './core/interceptors/loading-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,6 +16,6 @@ export const appConfig: ApplicationConfig = {
 //  Without it:  
 // this.products = response.data  // products updated
 // but UI still shows old products — Angular doesn't know to re-render
-    provideHttpClient()
+    provideHttpClient(withInterceptors([errorInterceptor, loadingInterceptor]))
   ]
 };

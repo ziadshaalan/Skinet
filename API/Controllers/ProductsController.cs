@@ -25,7 +25,7 @@ namespace API.Controllers
         {
             var spec = new ProductSpecification(productParams);
 
-            return await CreatePagedResult(repo, spec, productParams.PageSize, productParams.PageIndex);
+            return await CreatePagedResult(repo, spec, productParams.PageIndex, productParams.PageSize );
         }
 
         [HttpGet("{id:int}")]   //   api/products/2

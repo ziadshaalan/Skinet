@@ -1,4 +1,4 @@
-<header class="shadow-md p-3 w-full">
+<header class="shadow-md p-3 w-full max-h-20 fixed top-0 z-50 bg-white">
     <div class="flex align-middle items-center justify-between max-w-screen-2xl mx-auto">
         <img routerLink="/" src="images/logo.png" alt="app logo" class="max-h-16">
         <nav class="flex gap-3 my-2 uppercase text-xl">
@@ -9,7 +9,7 @@
             >Home</a>
 
             <a routerLink="/shop" routerLinkActive="active">Shop</a>
-            <a>Contact</a>
+            <a routerLink="/test-error" routerLinkActive="active">Errors</a>
         </nav>
         <!-- align-middle probably redundant -->
         <div class="flex gap-3 align-middle items-center"> 
@@ -23,3 +23,15 @@
     </div>
 
 </header>
+
+@if (busyService.loading) {
+    <mat-progress-bar mode="indeterminate" class="max-h-20 top-20 fixed z-50" ></mat-progress-bar>
+}
+
+<!-- 
+  fixed       → stays in place on scroll (position: fixed)
+  top-0       → pinned to very top of screen
+  z-50        → stacks above all page content (z-index: 50)
+  max-h-20    → caps header height at 80px
+  bg-white    → solid background so scrolled content doesn't show through
+-->

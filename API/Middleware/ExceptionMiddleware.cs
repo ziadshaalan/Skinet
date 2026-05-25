@@ -24,7 +24,7 @@ namespace API.Middleware
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
             var response = env.IsDevelopment()
-                ? new ApiErrorResponse(context.Response.StatusCode, ex.Message, ex.Message)
+                ? new ApiErrorResponse(context.Response.StatusCode, ex.Message, ex.StackTrace)
                 : new ApiErrorResponse(context.Response.StatusCode, ex.Message, "Internal server error");
             // In Development: return detailed error; outside Development: hide internal details for security.
 

@@ -41,10 +41,14 @@ namespace API
                 app.UseSwaggerUI();
             }
 
+
+            
+
+
             app.UseMiddleware<ExceptionMiddleware>();
             // Global exception middleware should be early in pipeline to catch downstream exceptions.
 
-            app.UseCors( x => x
+            app.UseCors(x => x
             .AllowAnyHeader()
             .AllowAnyMethod()
             .WithOrigins("http://localhost:4200", "https://localhost:4200"));
