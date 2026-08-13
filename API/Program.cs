@@ -1,7 +1,9 @@
 using API.Middleware;
 using Core.Interfaces;
 using Infrastructure.Data;
+using Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -16,11 +18,19 @@ namespace API
             // Add services to the container.
 
             builder.Services.AddControllers();
+            // Registers EF Core DbContext with SQL Server connection from app settings.
             builder.Services.AddDbContext<StoreContext>(opt =>
             {
                 opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
-            // Registers EF Core DbContext with SQL Server connection from app settings.
+            // ADD THIS — Redis registration
+            builder.Services.AddSingleton<IConnectionMultiplexer>(config =>
+            {
+                var connString = builder.Configuration.GetConnectionString("Redis");
+                if (connString == null) throw new Exception("Cannot get redis connection string");
+                var configuration = ConfigurationOptions.Parse(connString, true);
+                return ConnectionMultiplexer.Connect(configuration);
+            });
 
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -28,6 +38,7 @@ namespace API
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));  //typeof keyword added bcus return type of these genrric files are unknown 
+            builder.Services.AddScoped<ICartService, CartService>();
             builder.Services.AddCors();
 
 
