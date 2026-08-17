@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations;
 namespace API.DTOs
 {
     public class CreateProductDto
-    {
+    { 
         [Required]
         public string Name { get; set; } = string.Empty; // Server side initiation to avoid nullability which is required in core entity(note: still notifies the user if field was ignored).
 

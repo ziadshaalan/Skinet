@@ -6,6 +6,7 @@ import { CurrencyPipe } from '@angular/common';
 import { MatAnchor } from "@angular/material/button";
 import { RouterLink } from "@angular/router";
 import { ShopService } from '../../../core/services/shop-service';
+import { CartService } from '../../../core/services/cart-service';
 
 @Component({
   selector: 'app-product-item',
@@ -27,6 +28,10 @@ export class ProductItem {
 // Without it, products?: Pagination<Product> in the parent would do nothing.
   @Input() product?: Product 
   shopService = inject(ShopService)
+
+  cartService = inject(CartService)
+
+
 
   
 }

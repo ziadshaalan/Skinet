@@ -13,7 +13,10 @@
         </nav>
         <!-- align-middle probably redundant -->
         <div class="flex gap-3 align-middle items-center"> 
-            <a matBadge="5" class="custom-badge mt-2 mr-2">
+            <a routerLink="/cart"
+            routerLinkActive="active"
+             matBadge="{{cartService.itemCount()}}"
+             class="custom-badge mt-2 mr-2">
                 <mat-icon>shopping_cart</mat-icon>
             </a>
             <button mat-stroked-button>Login</button>
