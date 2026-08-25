@@ -1,4 +1,5 @@
 using API.Middleware;
+using Core.Entities;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Services;
@@ -39,6 +40,9 @@ namespace API
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));  //typeof keyword added bcus return type of these genrric files are unknown 
             builder.Services.AddScoped<ICartService, CartService>();
+
+            builder.Services.AddAuthorization();
+            builder.Services.AddIdentityApiEndpoints<AppUser>().AddEntityFrameworkStores<StoreContext>();
             builder.Services.AddCors();
 
 
@@ -68,6 +72,8 @@ namespace API
 
 
             app.MapControllers();
+            app.MapGroup("api").MapIdentityApi<AppUser>(); // --> Endpoints at: /api/account/register, /api/login ...
+
             // Maps controller actions to endpoints.
 
 
