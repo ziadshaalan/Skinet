@@ -7,12 +7,18 @@ import { NotFound } from './shared/not-found/not-found';
 import { ServerError } from './shared/server-error/server-error';
 import { Cart } from './features/cart/cart-component';
 import { Checkout } from './features/checkout/checkout';
+import { Login } from './features/account/login/login';
+import { Register } from './features/account/register/register';
+import { authGuard } from './core/guards/auth-guard';
+import { emptyGuard } from './core/guards/empty-guard';
 
 export const routes: Routes = [
     {path: '', component: Home},
     {path: 'shop', component: Shop},
     {path: 'shop/:id', component: ProductDetails},
-    {path: 'checkout', component: Checkout},
+    {path: 'checkout', component: Checkout, canActivate: [authGuard, emptyGuard]},  // Checkout requires the user to be authenticated.
+    {path: 'account/login', component: Login},
+    {path: 'account/register', component: Register},
     {path: 'cart', component: Cart},
     {path: 'test-error', component: TestError},
     {path: 'not-found', component: NotFound},

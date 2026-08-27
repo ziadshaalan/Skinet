@@ -9,6 +9,7 @@ import { errorInterceptor } from './core/interceptors/error-interceptor';
 import { loadingInterceptor } from './core/interceptors/loading-interceptor';
 import { lastValueFrom } from 'rxjs';
 import { InitService } from './core/services/init';
+import { authInterceptor } from './core/interceptors/auth-interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -27,6 +28,10 @@ export const appConfig: ApplicationConfig = {
         }
       })
     }),
-    provideHttpClient(withInterceptors([errorInterceptor, loadingInterceptor]))
+    provideHttpClient(withInterceptors([
+      errorInterceptor,
+       loadingInterceptor,
+       authInterceptor
+      ]))
   ]
 };
