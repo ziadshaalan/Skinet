@@ -19,7 +19,7 @@ export const authGuard: CanActivateFn = (route, state) => {
         if(auth.isAuthenticated) { 
           return true 
         } else {
-           router.navigate(['account/login'], {queryParams: {returnUrl: state.url}})
+           router.navigate(['account/login'], {queryParams: {returnUrl: state.url}}) //2nd argument saves the url from which the user has been forwarded from in order to return user back after log in completion
            return false
         }
       })

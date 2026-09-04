@@ -13,10 +13,10 @@ import { TextInput } from "../../../shared/components/text-input/text-input";
   selector: 'app-register',
   imports: [
     ReactiveFormsModule,
-    MatFormField,
+    // MatFormField,
     MatCard,
-    MatInput,
-    MatLabel,
+    // MatInput,
+    // MatLabel,
     MatButton,
     TextInput,
 ],

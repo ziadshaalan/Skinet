@@ -1,10 +1,11 @@
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, Signal, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { Cart, CartItem } from '../../shared/models/cart';
 import { Product } from '../../shared/models/product';
 import { map } from 'rxjs';
 import { NotFound } from '../../shared/not-found/not-found';
+import { DeliveryMethod } from '../../shared/models/deliveryMethod';
 
 @Injectable({
   providedIn: 'root',
@@ -18,12 +19,16 @@ export class CartService {
     // REDUCE — sums item.quantity across the cart into one total number.
     return this.cart()?.items.reduce((sum, item) => sum + item.quantity, 0)
   })
+  selectedDelivery = signal<DeliveryMethod | null>(null)
 
+
+  //Reading a signal inside computed() registers it as a dependency automatically — no manual subscribe/unsubscribe needed
   totals = computed(() => {
      const cart = this.cart()   // ← reading this signal registers it as a dependency
+     const delivery = this.selectedDelivery()
      if (!cart) return null
      const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
-     const shipping = 0
+     const shipping = delivery ? delivery.price : 0
      const discount= 0
     return {
       subtotal,

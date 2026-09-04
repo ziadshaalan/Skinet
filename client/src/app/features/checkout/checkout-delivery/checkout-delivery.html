@@ -1,0 +1,24 @@
+<div class="w-full">
+    <mat-radio-group
+     [value]="this.cartService.selectedDelivery()?.id"
+     (change)="updateDeliveryMethod($event.value)"
+     class="grid grid-cols-2 gap-4">
+        @for (method of this.checkoutService.deliveryMethod; track method.id) {
+            <label class="p-3 border border-gray-200 cursor-pointer w-full h-full hover:bg-purple-100">
+                <mat-radio-button 
+                class="w-full h-full"
+                [checked]="cartService.selectedDelivery() === method"
+                [value]="method">
+                    <div class="flex flex-col w-full h-full">
+                        <strong>{{method.shortName}} - {{method.price | currency}}</strong>
+                        <span class="text-sm">{{method.description}}</span>
+                    </div>
+                </mat-radio-button>
+            </label>
+        }
+    </mat-radio-group>
+</div>
+
+<!--Write (event → state): Updates selectedDelivery signal + persists to Redis-->
+<!--Read (state → UI) [checked]="cartService.selectedDelivery() === method": 
+ Tells Angular Material which radio to visually show as selected, based on current signal state-->

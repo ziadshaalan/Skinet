@@ -3,7 +3,7 @@ import { MatInput } from '@angular/material/input';
 import { MatFormField, MatLabel } from "@angular/material/select";
 import { MatButton } from '@angular/material/button';
 import { CartService } from '../../../core/services/cart-service';
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, Location } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -21,5 +21,5 @@ import { RouterLink } from '@angular/router';
 })
 export class OrderSummary {
   cartService = inject(CartService)
-
+  location = inject(Location) // Reads current route path to conditionally show/hide UI in shared component
 }

@@ -24,7 +24,8 @@ namespace API
             {
                 opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
-            // ADD THIS — Redis registration
+
+            // Redis registration
             builder.Services.AddSingleton<IConnectionMultiplexer>(config =>
             {
                 var connString = builder.Configuration.GetConnectionString("Redis");
@@ -40,6 +41,7 @@ namespace API
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));  //typeof keyword added bcus return type of these genrric files are unknown 
             builder.Services.AddScoped<ICartService, CartService>();
+            builder.Services.AddScoped<IPaymentService, PaymentService>();
 
             builder.Services.AddAuthorization();
             builder.Services.AddIdentityApiEndpoints<AppUser>().AddEntityFrameworkStores<StoreContext>();
@@ -66,6 +68,7 @@ namespace API
             app.UseCors(x => x
             .AllowAnyHeader()
             .AllowAnyMethod()
+            .AllowCredentials()
             .WithOrigins("http://localhost:4200", "https://localhost:4200"));
             // With that web browser will allow us to request the data from our API and display it on the page.
             //without it request can go to our API server but a browser secuirty feature will prevent us from loading the data into the browser.
