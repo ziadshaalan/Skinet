@@ -24,7 +24,7 @@ export class StripeService {
 
 
   constructor() {
-    this.stripePromise = loadStripe(environment.StripePublicKey)
+    this.stripePromise = loadStripe(environment.StripePublicKey)  //Initializes the client-side Stripe SDK
   }
 
   getStripeInstance() {

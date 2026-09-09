@@ -14,8 +14,15 @@ using Microsoft.EntityFrameworkCore;
 namespace API.Controllers
 {
 
-   
-    public class ProductsController(IGenericRepository<Product> repo) : BaseApiController
+
+
+    // SPECIFICATION PATTERN — how a query gets built and run:
+    // 1. ProductSpecification (extends BaseSpecification<T>) describes the query as DATA — Criteria, OrderBy, Skip/Take — no DB code, nothing executes yet
+    // 2. GenericRepository<T> receives the spec (ISpecification<T>) and hands it to SpecificationEvaluator<T> — repository itself never builds the query
+    // 3. SpecificationEvaluator<T>.GetQuery() reads the spec's rules and chains them onto IQueryable (.Where/.OrderBy/.Skip/.Take) — still just a plan, nothing sent to SQL yet
+    // 4. Back in GenericRepository<T>, .ToListAsync() is the ONLY point EF Core (via StoreContext) turns that plan into real SQL and hits the database
+
+    public class ProductsController(IUnitOfWork unit) : BaseApiController
     {
         
         [HttpGet]
@@ -25,13 +32,13 @@ namespace API.Controllers
         {
             var spec = new ProductSpecification(productParams);
 
-            return await CreatePagedResult(repo, spec, productParams.PageIndex, productParams.PageSize );
+            return await CreatePagedResult(unit.Repository<Product>(), spec, productParams.PageIndex, productParams.PageSize );
         }
 
         [HttpGet("{id:int}")]   //   api/products/2
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
-            var prodcut = await repo.GetByIdAsync(id);
+            var prodcut = await unit.Repository<Product>().GetByIdAsync(id);
 
             if (prodcut == null) return NotFound();
 
@@ -42,8 +49,8 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<Product>> CreateProduct(Product product)     //No need to add [FormBody] as [ApiController] Manages that
         {
-            repo.Add(product);
-            if(await repo.SaveAllAsync())   
+            unit.Repository<Product>().Add(product);
+            if(await unit.Complete())   
             {
                 return CreatedAtAction("GetProduct", new { id = product.Id }, product);     /* It automatically builds the URL to the newly created resource
                                                                                              * by calling the GetProduct action and creating route parameter for that action*/
@@ -54,14 +61,13 @@ namespace API.Controllers
         [HttpPut("{id:int}")]
         public async Task<ActionResult<Product>> UpdateProduct(int id, Product product)
         {
-            repo.Add(product);
             if (product.Id != id || !ProductExists(id))
             {
                 return BadRequest("Cannot update this product");
             }
-            repo.Update(product);
+            unit.Repository<Product>().Update(product);
             
-           if (await repo.SaveAllAsync())
+           if (await unit.Complete())
             {
                 return NoContent();
             }
@@ -72,11 +78,11 @@ namespace API.Controllers
         [HttpDelete("{id:int}")]
         public async Task<ActionResult<Product>> DeleteProduct(int id)
         {
-            var product = await repo.GetByIdAsync(id);
+            var product = await unit.Repository<Product>().GetByIdAsync(id);
             if (product == null) return NotFound();
 
-            repo.Remove(product);
-            if( await repo.SaveAllAsync())
+            unit.Repository<Product>().Remove(product);
+            if( await unit.Complete())
             {
                 return NoContent();
             }
@@ -90,7 +96,7 @@ namespace API.Controllers
         {
             var spec = new BrandListSpecification();
 
-            return Ok(await repo.ListAsync(spec));
+            return Ok(await unit.Repository<Product>().ListAsync(spec));
 
         }
 
@@ -99,12 +105,12 @@ namespace API.Controllers
         {
             var spec = new TypeListSpecification();
 
-            return Ok(await repo.ListAsync(spec));
+            return Ok(await unit.Repository<Product>().ListAsync(spec));
         }
 
         private bool ProductExists(int id)
         {
-            return repo.Exists(id);
+            return unit.Repository<Product>().Exists(id);
         }
     }
 }

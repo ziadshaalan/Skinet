@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Core.Entities
 {
-    public class DeliveryMethods : BaseEntity
+    public class DeliveryMethod : BaseEntity
     {
         public required string ShortName { get; set; }
         public required string DeliveryTime { get; set; }
