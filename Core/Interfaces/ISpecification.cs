@@ -14,6 +14,9 @@ namespace Core.Interfaces
         Expression<Func<T, bool>>? Criteria { get; }   // WHERE clause
         Expression<Func<T, object>> OrderBy { get; }
         Expression<Func<T, object>> OrderByDescending { get; }
+        List<Expression<Func<T, object>>> Includes { get; }
+        List<string> IncludesString { get; } // For ThenInclude
+
         bool IsDistinct { get; }
         int Take {  get; }
         int Skip { get; }

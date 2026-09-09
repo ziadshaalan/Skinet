@@ -25,7 +25,7 @@ namespace Infrastructure.Data
             if (!context.DeliveryMethods.Any())
             {
                 var dmData = await File.ReadAllTextAsync("../infrastructure/Data/SeedData/Delivery.json");
-                var methods = JsonSerializer.Deserialize<List<DeliveryMethods>>(dmData);
+                var methods = JsonSerializer.Deserialize<List<DeliveryMethod>>(dmData);
                 if (methods == null) return;
                 context.DeliveryMethods.AddRange(methods);
                 await context.SaveChangesAsync();

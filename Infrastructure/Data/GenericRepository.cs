@@ -32,11 +32,12 @@ namespace Infrastructure.Data
         {
             context.Set<T>().Remove(entity);
         }
+        //UNIT OF WORK WHICH HAS BEEN ADDED EARLIER HANDLES THAT
 
-        public async Task<bool> SaveAllAsync()
-        {
-            return await context.SaveChangesAsync() > 0;
-        }
+        //public async Task<bool> SaveAllAsync()
+        //{
+        //    return await context.SaveChangesAsync() > 0;
+        //}
 
         public void Update(T entity)
         {
