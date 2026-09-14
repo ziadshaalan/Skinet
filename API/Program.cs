@@ -1,4 +1,5 @@
 using API.Middleware;
+using API.SignalR;
 using Core.Entities;
 using Core.Interfaces;
 using Infrastructure.Data;
@@ -43,6 +44,8 @@ namespace API
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
             builder.Services.AddScoped<ICartService, CartService>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
+            builder.Services.AddSignalR();
+
 
             builder.Services.AddAuthorization();
             builder.Services.AddIdentityApiEndpoints<AppUser>().AddEntityFrameworkStores<StoreContext>();
@@ -74,9 +77,13 @@ namespace API
             // With that web browser will allow us to request the data from our API and display it on the page.
             //without it request can go to our API server but a browser secuirty feature will prevent us from loading the data into the browser.
 
+            app.UseAuthentication();
+            app.UseAuthorization();
+
 
             app.MapControllers();
             app.MapGroup("api").MapIdentityApi<AppUser>(); // --> Endpoints at: /api/account/register, /api/login ...
+            app.MapHub<NotificationHub>("/hub/notifications");  //"When a SignalR client connects to /hub/notifications, use my NotificationHub class to handle that connection."
 
             // Maps controller actions to endpoints.
 

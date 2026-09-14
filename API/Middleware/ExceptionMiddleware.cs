@@ -3,6 +3,8 @@ using System.Net;
 using System.Text.Json;
 
 namespace API.Middleware
+
+// It's a piece of middleware — one link in ASP.NET Core's request pipeline. Every request passes through a chain of components (routing → CORS → auth → your controller → ...), and each one can act before/after the next. This one wraps everything after it in a try/catch:
 {
     public class ExceptionMiddleware(IHostEnvironment env, RequestDelegate next)
     {
@@ -10,12 +12,12 @@ namespace API.Middleware
         {
 			try
 			{
-				await next(context);
-			}
+				await next(context);    // continue down the pipeline (routing, controller, etc.)
+            }
 			catch (Exception ex)
 			{
-				await HandleExceptionAsync(context, ex, env);
-			}
+				await HandleExceptionAsync(context, ex, env);   // catch ANY unhandled exception, anywhere downstream
+            }
         }
 
         private static Task HandleExceptionAsync(HttpContext context, Exception ex, IHostEnvironment env)

@@ -13,5 +13,6 @@ namespace Core.Entities
         public string? LastName { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Address? Address { get; set; }
+        public string? StripeCustomerId { get; set; } //
     }
 }

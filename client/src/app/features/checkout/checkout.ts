@@ -10,12 +10,14 @@ import {MatCheckboxChange, MatCheckboxModule} from '@angular/material/checkbox';
 import { StepperSelectionEvent } from '@angular/cdk/stepper';
 import { Address } from '../../shared/models/user';
 import { AccountService } from '../../core/services/account-service';
-import { finalize, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { CheckoutDelivery } from "./checkout-delivery/checkout-delivery";
 import { CheckoutReview } from "./checkout-review/checkout-review";
 import { CartService } from '../../core/services/cart-service';
 import { CurrencyPipe, JsonPipe } from '@angular/common';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
+import { OrderToCreate, ShippingAddress } from '../../shared/models/order';
+import { OrderService } from '../../core/services/order-service';
 
 @Component({
   selector: 'app-checkout',
@@ -38,6 +40,7 @@ export class Checkout implements OnInit, OnDestroy {
   private router = inject(Router)
   private stripeService = inject(StripeService)
   private accountService = inject(AccountService)
+  private orderService = inject(OrderService)
   cartService = inject(CartService)
   addressElement?: StripeAddressElement
   paymentElement?: StripePaymentElement
@@ -116,13 +119,25 @@ async confirmPayment(stepper: MatStepper) {
   this.loading = true
   try {
     if (this.confirmationToken) {
-      const result = await this.stripeService.confirmPayment(this.confirmationToken)
-      if (result.error) {
-        throw new Error(result.error.message)
-      } else {
+      const result = await this.stripeService.confirmPayment(this.confirmationToken)  
+
+      if (result.paymentIntent?.status === 'succeeded') { // Case 1: payment succeeded → create the order
+        const order = await this.CreateOrderModel()
+        const orderResult = await firstValueFrom(this.orderService.CreateOrder(order))
+        if (orderResult) {
+        this.orderService.orderComplete = true
         this.cartService.deleteCart()
         this.cartService.selectedDelivery.set(null) 
         this.router.navigateByUrl('/checkout/success')
+        }
+        else {
+          throw new Error('order creation failed')
+        }
+      } else if (result.error) {
+        throw new Error(result.error.message)   // Case 2: payment failed with a known Stripe error
+
+      } else {
+        throw new Error('Something went wrong') // Case 3: neither succeeded nor had a stripe error → unexpected state
       }
     }
   } catch (error: any) {
@@ -134,11 +149,36 @@ async confirmPayment(stepper: MatStepper) {
 
 }
 
+private async CreateOrderModel(): Promise<OrderToCreate> {
+  const cart = this.cartService.cart()
+
+  const shippingAddress = await this.getAddressFromStripeAddress() as ShippingAddress
+  const card = await this.confirmationToken?.payment_method_preview.card
+
+  if (!cart?.id || !shippingAddress || !cart.deliveryMethodId || !card) {
+    throw new Error("Problem creating order")
+  }
+  
+
+  return {
+    cartId: cart.id,     
+    deliveryMethodId: cart.deliveryMethodId,
+    shippingAddress: shippingAddress,
+    paymentSummary: {
+      last4: +card.last4,   //'+' converts string to int
+      brand: card.brand,
+      expMonth: card.exp_month,
+      expYear: card.exp_year
+    }
+
+  }
+}
+
 
 async onStepChange(event: StepperSelectionEvent) {
   if (event.selectedIndex === 1) {
     if (this.saveAddress) {
-      const address = await this.getAddressFromStripeAddress() 
+      const address = await this.getAddressFromStripeAddress()  as Address
       address && firstValueFrom(this.accountService.updateAddress(address))
     }
   }
@@ -149,13 +189,16 @@ async onStepChange(event: StepperSelectionEvent) {
     await this.getConfirmationToken()
   }
 }
+
+
   
-private async getAddressFromStripeAddress(): Promise<Address | null> {
+private async getAddressFromStripeAddress(): Promise<Address | ShippingAddress | null> {
   const result = await this.addressElement?.getValue()
   const address = result?.value.address // drills into the nested response shape Stripe returns
     
   if (address) {      // reshapes Stripe's field names into YOUR Address model
     return {
+      name: result.value.name,
       line1: address.line1,
       line2: address.line2,
       city: address.city,

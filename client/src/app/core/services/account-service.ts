@@ -3,6 +3,7 @@ import { environment } from '../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Address, User } from '../../shared/models/user';
 import { map, tap } from 'rxjs';
+import { Signalr } from './signalr';
 
 @Injectable({
   providedIn: 'root',
@@ -10,13 +11,17 @@ import { map, tap } from 'rxjs';
 export class AccountService {
   baseUrl = environment.apiUrl
   private http = inject(HttpClient)
+  private signalrService = inject(Signalr)
   currentUser = signal<User | null>(null)
+  
 
     // withCredentials here is now redundant — authInterceptor adds it to every request automatically
   login(values:any) {
     let params = new HttpParams()
     params = params.append('useCookies', true)
-    return this.http.post<User>(this.baseUrl + 'login', values, {params, withCredentials: true})
+    return this.http.post<User>(this.baseUrl + 'login', values, {params, withCredentials: true}).pipe(
+      tap(() => this.signalrService.createHubConnection())  // Establish a persistent connection with the server after login, allowing the server to send real-time notifications to this user.
+    )
 
   }
 
@@ -26,7 +31,9 @@ export class AccountService {
 
   logout() {
       // withCredentials here is now redundant — authInterceptor adds it to every request automatically
-    return this.http.post(this.baseUrl + 'account/logout', {}, {withCredentials: true})
+    return this.http.post(this.baseUrl + 'account/logout', {}, {withCredentials: true}).pipe(
+      tap(() => this.signalrService.stopHubConnection())
+    )
   }
 
   getUserInfo() {

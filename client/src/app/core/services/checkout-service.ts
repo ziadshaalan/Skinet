@@ -13,6 +13,8 @@ export class CheckoutService {
   deliveryMethod:  DeliveryMethod[] = []
 
   getDeliveryMethods() {
+    // Use the cached delivery methods if they were already fetched,
+    // avoiding another HTTP request during this app session.
     if (this.deliveryMethod.length > 0) return of(this.deliveryMethod)
     return this.http.get<DeliveryMethod[]>(this.baseUrl + 'payments/delivery-methods').pipe(
       map(methods => {

@@ -22,8 +22,14 @@ namespace Core.Specification
             AddIncludes("OrderItems");
             AddIncludes("DeliveryMethod");
 
-            AddIncludes("OrderItems.XXXX"); // ThenInclude: XXXX is a related entity inside the 1st related entity to the main entity
+            //AddIncludes("OrderItems.XXXX"); // ThenInclude: XXXX is a related entity inside the 1st related entity to the main entity
 
+        }
+
+        public OrderSpecification(string PaymentIntentId, bool isPaymentIntent) : base(x => x.PaymentIntentId == PaymentIntentId)
+        {
+            AddIncludes("OrderItems");
+            AddIncludes("DeliveryMethod");
         }
     }
 }
