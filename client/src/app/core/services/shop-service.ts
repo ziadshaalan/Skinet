@@ -3,13 +3,14 @@ import { inject, Injectable, OnInit } from '@angular/core';
 import { Product } from '../../shared/models/product';
 import { Pagination } from '../../shared/models/pagination';
 import { ShopParams } from '../../shared/models/shopParams';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 //Service is initiliazed when application starts, and it's singleton, means any property stored here will be avaliable in the lifetime of the app.
 export class ShopService {
-  baseUrl = 'https://localhost:5001/api/'
+  baseUrl = environment.apiUrl    // angular detects if production = true it runs file containing no localhost and if false it run the one with localhost, so no if statement needed, property name must be identical in the separate files
   private http = inject(HttpClient)
   brands: string[] = []
   types: string[] = []

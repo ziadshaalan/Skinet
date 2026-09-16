@@ -13,6 +13,6 @@ namespace Core.Entities
         public string? LastName { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public Address? Address { get; set; }
-        public string? StripeCustomerId { get; set; } //
+        public string? StripeCustomerId { get; set; } // without this, Stripe had no way to link payments to our users, so it grouped them as guests by card number and mixed up names across accounts
     }
 }

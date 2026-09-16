@@ -16,7 +16,7 @@ namespace Infrastructure.Services
             var cart = await cartService.GetCartAsync(cartId);
             if(cart == null) return null;
 
-            var stripeCustomerId = await GetOrCreateStripeCustomerId(email);
+            var stripeCustomerId = await GetOrCreateStripeCustomerId(email); // resolves the Stripe Customer for this user before creating the intent
 
             var shippingPrice = 0m;
             if (cart.DeliveryMethodId.HasValue)
@@ -48,7 +48,7 @@ namespace Infrastructure.Services
                     Amount = (long)cart.Items.Sum(x => x.Quantity * (x.Price * 100)) + (long)(shippingPrice * 100),
                     Currency = "usd",
                     PaymentMethodTypes = ["card"],
-                    Customer = stripeCustomerId
+                    Customer = stripeCustomerId  // ties this payment to a real Stripe customer instead of leaving it as a guest
 
                 };
                 intent = await service.CreateAsync(options);
@@ -68,23 +68,24 @@ namespace Infrastructure.Services
             await cartService.SetCartAsync(cart);
             return cart;
         }
-
+        // creates one Stripe customer per app user, reused on every future payment instead of duplicated
         private async Task<string> GetOrCreateStripeCustomerId(string email)
         {
             var user = await userManager.FindByEmailAsync(email);
 
             if (user == null) throw new Exception("Problem finding user");
 
-            if (!string.IsNullOrEmpty(user.StripeCustomerId)) return user.StripeCustomerId;
+            if (!string.IsNullOrEmpty(user.StripeCustomerId)) return user.StripeCustomerId; // already exists — reuse it, don't recreate
+
 
             var customerService = new CustomerService();
             var customer = await customerService.CreateAsync(new CustomerCreateOptions {
                 Name = $"{user.FirstName} {user.LastName}",
-                Email = email,
+                Email = email
             });
 
             user.StripeCustomerId = customer.Id;
-            await userManager.UpdateAsync(user);
+            await userManager.UpdateAsync(user);    // persist so future payments reuse this same customer
 
             return customer.Id;
 

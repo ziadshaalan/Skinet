@@ -23,7 +23,11 @@ namespace API
             // Registers EF Core DbContext with SQL Server connection from app settings.
             builder.Services.AddDbContext<StoreContext>(opt =>
             {
-                opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+                opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+                    sqlOptions => sqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorNumbersToAdd: null));
             });
 
             // Redis registration
@@ -77,16 +81,19 @@ namespace API
             // With that web browser will allow us to request the data from our API and display it on the page.
             //without it request can go to our API server but a browser secuirty feature will prevent us from loading the data into the browser.
 
-            app.UseAuthentication();
+            app.UseAuthentication();    // for signlaR
             app.UseAuthorization();
+
+            app.UseDefaultFiles();  // Maps "/" to the default file (normally index.html) in wwwroot.
+            app.UseStaticFiles();   // Actually serves those static files from wwwroot to the browser.
+
 
 
             app.MapControllers();
-            app.MapGroup("api").MapIdentityApi<AppUser>(); // --> Endpoints at: /api/account/register, /api/login ...
-            app.MapHub<NotificationHub>("/hub/notifications");  //"When a SignalR client connects to /hub/notifications, use my NotificationHub class to handle that connection."
+            app.MapGroup("api").MapIdentityApi<AppUser>();          // --> Endpoints at: /api/account/register, /api/login ...
+            app.MapHub<NotificationHub>("/hub/notifications");      //"When a SignalR client connects to /hub/notifications, use my NotificationHub class to handle that connection."
 
-            // Maps controller actions to endpoints.
-
+            app.MapFallbackToController("Index", "Fallback");       // when /checkout requested it hits .net first => "ASP.NET Core doesn't know this route, so give Angular its index.html and let Angular decide which component it hits"
 
             try
             {

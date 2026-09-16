@@ -19,7 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj" />
+	  <None Include="Data\SeedData\**" CopyToOutputDirectory="PreserveNewest" />    <!--It means make sure the JSON files are copied into the output alongside the compiled application so the running app can find them.-->
+    <ProjectReference Include="..\Core\Core.csproj" />                              <!--"PreserveNewest" mean Copy the file when necessary, but don't copy it again if the output already has the latest version.-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>
