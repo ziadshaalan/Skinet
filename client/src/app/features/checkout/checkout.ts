@@ -121,7 +121,7 @@ async confirmPayment(stepper: MatStepper) {
     if (this.confirmationToken) {
       const result = await this.stripeService.confirmPayment(this.confirmationToken)  
 
-      if (result.paymentIntent?.status === 'succeeded') { // Case 1: payment succeeded → create the order
+      if (result.paymentIntent?.status === 'succeeded') { // result.paymentIntent is the Stripe PaymentIntent object returned by confirmPayment()
         const order = await this.CreateOrderModel()
         const orderResult = await firstValueFrom(this.orderService.CreateOrder(order))
         if (orderResult) {

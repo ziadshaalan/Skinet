@@ -1,5 +1,4 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { MatCard } from '@angular/material/card';
 import { Product } from '../../shared/models/product';
 import { ShopService } from '../../core/services/shop-service';
 import { ProductItem } from './product-item/product-item';
@@ -9,13 +8,13 @@ import { MatButton } from '@angular/material/button';
 import { MatIcon } from "@angular/material/icon";
 import { MatMenu, MatMenuTrigger } from '@angular/material/menu';
 import { MatListOption, MatSelectionList, MatSelectionListChange } from '@angular/material/list';
-import { MatOption } from '@angular/material/autocomplete';
 import { ShopParams } from '../../shared/models/shopParams';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { Pagination } from '../../shared/models/pagination';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { EmptyState } from '../../shared/components/empty-state/empty-state';
   //Products = signal<Product[]>([]);  ==> if signal used instead of zone 
 // observable: a stream of data that is lazy — does nothing until you subscribe
     // .subscribe() is what triggers the actual API call and delivers the data
@@ -30,7 +29,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatListOption,
     MatMenuTrigger,
     MatPaginator,
-    FormsModule
+    FormsModule,
+    EmptyState
 ],
   templateUrl: './shop.html',
   styleUrl: './shop.css',
@@ -65,6 +65,11 @@ export class Shop implements OnInit {
   initializeShop() {
     this.shopService.getBrands()
     this.shopService.getTypes()
+    this.getProducts()
+  }
+
+  resetFilters() {
+    this.shopParams = new ShopParams
     this.getProducts()
   }
 
