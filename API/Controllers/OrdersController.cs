@@ -42,7 +42,7 @@ namespace API.Controllers
                 {
                     ItemOrdered = itemOrdered,
                     Price = productItem.Price,
-                    Quantity = item.Quantity, // Question: in this case quantity comes from client side without recheck, isnt that vulnerable to intruders changing the real quantity
+                    Quantity = item.Quantity,
                 };
                 items.Add(orderItem);
 
@@ -58,8 +58,9 @@ namespace API.Controllers
                 OrderItems = items,
                 PaymentIntentId = cart.PaymentIntentId,
                 ShippingAddress = orderDto.ShippingAddress,
-                Subtotal = items.Sum(x => x.Price * x.Quantity), // why lambdaas this is not fetched from database its fetched from regular array and why didnt we just do the interation inside the for each loop
+                Subtotal = items.Sum(x => x.Price * x.Quantity),
                 PaymentSummary = orderDto.PaymentSummary,
+                Discount = orderDto.Discount,
             };
 
             unit.Repository<Order>().Add(order);

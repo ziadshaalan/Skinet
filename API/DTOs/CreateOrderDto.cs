@@ -13,7 +13,8 @@ namespace API.DTOs
         public ShippingAddress ShippingAddress { get; set; } = null!;
         [Required]
         public PaymentSummary PaymentSummary { get; set; } = null!;
-        // TODO: extract ShippingAddressDto/PaymentSummaryDto with field-level validation
+        // Recommended: extract ShippingAddressDto/PaymentSummaryDto with field-level validation
+        public decimal Discount { get; set; }
 
     }
 }

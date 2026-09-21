@@ -164,6 +164,7 @@ private async CreateOrderModel(): Promise<OrderToCreate> {
     cartId: cart.id,     
     deliveryMethodId: cart.deliveryMethodId,
     shippingAddress: shippingAddress,
+    discount: this.cartService.totals()?.discount,
     paymentSummary: {
       last4: +card.last4,   //'+' converts string to int
       brand: card.brand,

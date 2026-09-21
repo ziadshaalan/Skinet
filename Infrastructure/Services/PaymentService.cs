@@ -3,6 +3,8 @@ using Core.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Stripe;
+using Stripe.V2;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Infrastructure.Services
 {
@@ -13,45 +15,47 @@ namespace Infrastructure.Services
         {
             StripeConfiguration.ApiKey = config["StripeSettings:SecretKey"];
 
-            var cart = await cartService.GetCartAsync(cartId);
-            if(cart == null) return null;
+            var cart = await cartService.GetCartAsync(cartId)
+                ?? throw new Exception("Cart unavaliable");
+           
 
             var stripeCustomerId = await GetOrCreateStripeCustomerId(email); // resolves the Stripe Customer for this user before creating the intent
+                                                                             // 
+            var shippingPrice = await GetShippingPriceAsync(cart) ?? 0;
 
-            var shippingPrice = 0m;
-            if (cart.DeliveryMethodId.HasValue)
+            await ValidateCartItemsInCartAsync(cart);
+
+            var subtotal = CalculateSubTotal(cart);
+
+            if (cart.Coupon != null)
             {
-                var deliveryMethod = await unit.Repository<DeliveryMethod>().GetByIdAsync((int)cart.DeliveryMethodId);
-                if (deliveryMethod == null) return null;
-
-                shippingPrice = deliveryMethod.Price;
+                subtotal = await ApplyDiscountAsync(cart.Coupon, subtotal);
             }
 
-            foreach (var item in cart.Items) 
-            { 
-                var product = await unit.Repository<Core.Entities.Product>().GetByIdAsync(item.ProductId);
-                if (product == null) return null;
-                var productPrice = product.Price;
-                if (item.Price != product.Price)
-                {
-                    item.Price = product.Price;
-                }
-            }
+            var total = subtotal + shippingPrice;
 
+            await CreateUpdatePaymentIntentAsync(cart, total, stripeCustomerId);
+            
+            await cartService.SetCartAsync(cart);
+
+            return cart;
+        }
+
+        private async Task CreateUpdatePaymentIntentAsync(ShoppingCart cart, long total, string stripeCustomerId)
+        {
             var service = new PaymentIntentService();
-            PaymentIntent? intent = null;
 
             if (string.IsNullOrEmpty(cart.PaymentIntentId))
             {
                 var options = new PaymentIntentCreateOptions
                 {
-                    Amount = (long)cart.Items.Sum(x => x.Quantity * (x.Price * 100)) + (long)(shippingPrice * 100),
+                    Amount = total,
                     Currency = "usd",
                     PaymentMethodTypes = ["card"],
                     Customer = stripeCustomerId  // ties this payment to a real Stripe customer instead of leaving it as a guest
 
                 };
-                intent = await service.CreateAsync(options);
+                var intent = await service.CreateAsync(options);
                 cart.PaymentIntentId = intent.Id;
                 cart.ClientSecret = intent.ClientSecret;
 
@@ -60,14 +64,69 @@ namespace Infrastructure.Services
             {
                 var options = new PaymentIntentUpdateOptions
                 {
-                    Amount = (long)cart.Items.Sum(x => x.Quantity * (x.Price * 100)) + (long)(shippingPrice * 100),
+                    Amount = total
                 };
-                intent = await service.UpdateAsync(cart.PaymentIntentId, options);
+                await service.UpdateAsync(cart.PaymentIntentId, options);
             }
-            
-            await cartService.SetCartAsync(cart);
-            return cart;
         }
+
+        private async Task<long> ApplyDiscountAsync(AppCoupon appCoupon, long subtotal)
+        {
+            var couponService = new Stripe.CouponService();
+
+            var coupon = await couponService.GetAsync(appCoupon.CouponId);
+
+            if (coupon.AmountOff.HasValue)
+            {
+                subtotal -= (long)coupon.AmountOff * 100;
+            }
+            if (coupon.PercentOff.HasValue)
+            {
+                var discount = subtotal * (coupon.PercentOff.Value / 100);
+                subtotal -= (long)discount;
+            }
+
+            return subtotal;
+            
+        }
+
+        private long CalculateSubTotal(ShoppingCart cart)
+        {
+           var itemTotal = cart.Items.Sum(x => x.Quantity * (x.Price * 100));
+            return (long)itemTotal;
+        }
+
+        private async Task ValidateCartItemsInCartAsync(ShoppingCart cart)
+        {
+
+            foreach (var item in cart.Items)
+            {
+                var product = await unit.Repository<Core.Entities.Product>().GetByIdAsync(item.ProductId)
+                    ?? throw new Exception("Problem getting product in cart");
+
+                if (item.Quantity <= 0 || item.Quantity > product.QuantityInStock)
+                    throw new Exception("Invalid quantity in cart");  // reject negative/zero/over-stock quantity to block cart total manipulation
+
+                if (item.Price != product.Price)
+                {
+                    item.Price = product.Price;
+                }
+            }
+        }
+
+        private async Task<long?> GetShippingPriceAsync(ShoppingCart cart)
+        {
+            if (cart.DeliveryMethodId.HasValue)
+            {
+                var deliveryMethod = await unit.Repository<DeliveryMethod>().GetByIdAsync((int)cart.DeliveryMethodId)
+                    ?? throw new Exception("Problem with delivery method");
+
+                return (long)deliveryMethod.Price * 100;
+            }
+
+            return null;
+        }
+
         // creates one Stripe customer per app user, reused on every future payment instead of duplicated
         private async Task<string> GetOrCreateStripeCustomerId(string email)
         {

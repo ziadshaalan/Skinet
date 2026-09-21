@@ -4,6 +4,7 @@ import {MatRadioModule} from '@angular/material/radio';
 import { CurrencyPipe } from '@angular/common';
 import { CartService } from '../../../core/services/cart-service';
 import { DeliveryMethod } from '../../../shared/models/deliveryMethod';
+import { firstValueFrom } from 'rxjs';
 //The chain: user picks delivery → signal updates UI/totals instantly (client-side, no network) →
 //same click also pushes deliveryMethodId to Redis → later, moving to the Payment step re-triggers the backend to recompute
 //the real charge amount using that persisted deliveryMethodId → new clientSecret/amount comes back and syncs into the cart signal.
@@ -69,12 +70,12 @@ export class CheckoutDelivery implements OnInit {
     })
   }
 
-  updateDeliveryMethod(method: DeliveryMethod ) {
+ async updateDeliveryMethod(method: DeliveryMethod ) {
     this.cartService.selectedDelivery.set(method)
     const cart = this.cartService.cart()
     if (cart) {
       cart.deliveryMethodId = method.id
-      this.cartService.setCart(cart)
+      await firstValueFrom(this.cartService.setCart(cart))
       this.deliveryComplete.emit(true)
 
     }

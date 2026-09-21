@@ -12,18 +12,18 @@ namespace Core.Entities.OrderAggregate
         public PaymentSummary PaymentSummary { get; set; } = null!;
         public DeliveryMethod DeliveryMethod { get; set; } = null!;   
         public List<OrderItem> OrderItems { get; set; } = [];
-
         public OrderStatus Status { get; set; } = OrderStatus.Pending;
         public DateTime OrderDate { get; set; } = DateTime.UtcNow;
-        
         public required string BuyerEmail { get; set; }
         public decimal Subtotal { get; set; }
+        public decimal Discount { get; set; } // Added due to coupon
         public required string PaymentIntentId { get; set; }
+
 
 
         public decimal GetTotal()
         {
-            return Subtotal + DeliveryMethod.Price;
+            return Subtotal + DeliveryMethod.Price - Discount;
         }
     }
 }

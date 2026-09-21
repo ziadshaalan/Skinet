@@ -133,7 +133,7 @@ async confirmPayment(confirmationToken: ConfirmationToken) {
       map(cart => {
         this.cartService.cart.set(cart)
         return cart
-      })
+      })  
   )
 }
 

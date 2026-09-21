@@ -19,6 +19,7 @@ namespace API.Extensions
                 BuyerEmail = order.BuyerEmail,
                 OrderDate = order.OrderDate,
                 Subtotal = order.Subtotal,
+                Discount = order.Discount,
                 Total = order.GetTotal(),
                 Status = order.Status.ToString(),
                 OrderItems = order.OrderItems.Select(x => x.ToDto()).ToList(),

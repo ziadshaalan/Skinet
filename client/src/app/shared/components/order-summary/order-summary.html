@@ -31,14 +31,28 @@
   </div>
 
   <div class="space-y-4 rounded-lg border border-gray-200 bg-white shadow-sm">
-    <form class="space-y-2 flex flex-col p-2">
+    <form #form="ngForm" (ngSubmit)="onApplyVoucherCode()"
+     class="space-y-2 flex flex-col p-2">
       <label class="mb-2 block text-sm font-medium">Do you have a voucher code?</label>
+      @if (this.cartService.cart()?.coupon; as coupon) {
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-semibold">{{coupon.name}} applied</span>
+          <button (click)="removeCouponFromCart()" mat-icon-button>
+            <mat-icon class="delete-icon">delete</mat-icon>
+          </button>
+        </div>
+      }
+
       <mat-form-field appearance="outline">
         <mat-label>Voucher code</mat-label>
-        <input matInput type="text">
+        <input [disabled]="!!this.cartService.cart()?.coupon"
+         [(ngModel)]="code" name="code"
+         matInput type="text">
       </mat-form-field> 
 
-      <button mat-flat-button>Apply code</button>
+      <button [disabled]="!!this.cartService.cart()?.coupon"
+       type="submit"
+       mat-flat-button>Apply code</button>
     </form>
   </div>
 

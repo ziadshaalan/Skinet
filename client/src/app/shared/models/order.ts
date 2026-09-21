@@ -9,6 +9,7 @@ export interface Order {
   orderDate: string
   buyerEmail: string
   subtotal: number
+  discount?: number
   total: number
   paymentIntentId: string
 }
@@ -43,4 +44,5 @@ export interface OrderToCreate {
     deliveryMethodId: number
     shippingAddress: ShippingAddress
     paymentSummary: PaymentSummary
+    discount?: number
 }

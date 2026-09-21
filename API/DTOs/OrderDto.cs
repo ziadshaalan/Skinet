@@ -15,6 +15,7 @@ namespace API.DTOs
         public DateTime OrderDate { get; set; }
         public required string BuyerEmail { get; set; }
         public decimal Subtotal { get; set; }
+        public decimal Discount { get; set; }
         public decimal Total { get; set; }
         public required string PaymentIntentId { get; set; }
     }

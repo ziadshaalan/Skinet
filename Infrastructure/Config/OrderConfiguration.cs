@@ -17,6 +17,7 @@ namespace Infrastructure.Config
             builder.OwnsOne(x => x.PaymentSummary, o => o.WithOwner());
             builder.HasMany(x => x.OrderItems).WithOne().OnDelete(DeleteBehavior.Cascade);
             builder.Property(x => x.Subtotal).HasColumnType("decimal(18,2)");
+            builder.Property(x => x.Discount).HasColumnType("decimal(18,2)");
             builder.Property(x => x.Status).HasConversion(
               x => x.ToString(),
               x => (OrderStatus)Enum.Parse(typeof(OrderStatus), x)
