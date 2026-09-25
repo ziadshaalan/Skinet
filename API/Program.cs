@@ -4,8 +4,10 @@ using Core.Entities;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
+using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
@@ -53,7 +55,13 @@ namespace API
 
 
             builder.Services.AddAuthorization();
-            builder.Services.AddIdentityApiEndpoints<AppUser>().AddEntityFrameworkStores<StoreContext>();
+
+
+            builder.Services.AddIdentityApiEndpoints<AppUser>()
+                .AddRoles<IdentityRole>()
+                .AddEntityFrameworkStores<StoreContext>();
+                
+
             builder.Services.AddCors();
 
 
@@ -96,14 +104,22 @@ namespace API
 
             app.MapFallbackToController("Index", "Fallback");       // when /checkout requested it hits .net first => "ASP.NET Core doesn't know this route, so give Angular its index.html and let Angular decide which component it hits"
 
+
+
+
+            // Startup initialization:
+            // Create a DI scope because StoreContext and UserManager are scoped services,
+            // and this code runs during application startup, outside of a normal HTTP request.
+            // This scope lets us safely resolve them from DI, then apply migrations, seed data,
+            // and create the default admin user if it does not already exist.
             try
             {
                 using var scope = app.Services.CreateScope();     //"using" ensures that an object is automatically disposed (cleaned up) from memory when you're done with it.
                 var services = scope.ServiceProvider;
                 var context = services.GetRequiredService<StoreContext>();
+                var userManager = services.GetRequiredService<UserManager<AppUser>>();
                 await context.Database.MigrateAsync();           // Applies pending EF Core migrations automatically at startup.
-
-                await StoreContextSeed.SeedAsync(context);      // Seeds initial data if needed.
+                await StoreContextSeed.SeedAsync(context, userManager);      // Seeds initial data if needed.
 
 
             }

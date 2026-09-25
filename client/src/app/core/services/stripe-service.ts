@@ -43,7 +43,7 @@ export class StripeService {
     }
     return this.elements
   }
-
+  
   async createAddressElement() {
     if (!this.addressElement) {
     const elements = await this.initializeElements()

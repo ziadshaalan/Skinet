@@ -97,12 +97,12 @@ namespace API.Controllers
 
                 // Convert the order total to whole cents, using the same rounding approach as Stripe.
                 // Example: $19.995 × 100 = 1999.5 → 2000 cents.
-                var orderTotalInCents = (long)Math.Round(order.GetTotal() * 100, MidpointRounding.AwayFromZero);
-               
+                var orderTotalInCents = (long)Math.Round(order.GetTotal() * 100, MidpointRounding.AwayFromZero);   
+
 
 
                 // Recheck: amount actually charged via Stripe vs order total, catches tampering if order request was intercepted/modified (e.g. via DevTools or direct API call) after PaymentIntent was created
-                if ((long)order.GetTotal() * 100 != intent.Amount)      
+                if (orderTotalInCents != intent.Amount)      
                 {
                     order.Status = OrderStatus.PaymentMismatch; //Db trigger in order table which requires a unit.complete (savechanges)
                 }

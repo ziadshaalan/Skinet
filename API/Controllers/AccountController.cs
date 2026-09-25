@@ -87,7 +87,8 @@ namespace API.Controllers
                 user.FirstName,
                 user.LastName,
                 user.Email,
-                Address = user.Address?.ToDto() // explicit name needed — result of a method call, not a bare property
+                Address = user.Address?.ToDto(),     // explicit name needed — result of a method call, not a bare property
+                Roles = User.FindFirstValue(ClaimTypes.Role)
             });
 
         }

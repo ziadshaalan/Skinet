@@ -1,28 +1,40 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AccountService } from '../services/account-service';
-import { map, of } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
+import { Snackbar } from '../services/snackbar';
 
-//guard auto subscribes to observables
-export const authGuard: CanActivateFn = (route, state) => {
-  const accountService = inject(AccountService)
-  const router = inject(Router)
-  // Prevents unauthenticated users from accessing protected routes.
-// If the user is not logged in, redirect to login and save the requested URL
-// so they can be redirected back after successful authentication.
+// Authentication guard.
+// Runs on the parent route first. If the user is not authenticated,
+// navigation is redirected to login and the child route is never activated.
+// Only after authentication succeeds can the child route continue to adminGuard.
+export const authGuard: CanActivateFn = async (route, state) => {
 
+  const accountService = inject(AccountService);
+  const router = inject(Router);
+  const snackbar = inject(Snackbar)
+
+  // User already loaded
   if (accountService.currentUser()) {
-    return of(true)
-  } else {
-    return accountService.getAuthState().pipe(
-      map(auth => {
-        if(auth.isAuthenticated) { 
-          return true 
-        } else {
-           router.navigate(['account/login'], {queryParams: {returnUrl: state.url}}) //2nd argument saves the url from which the user has been forwarded from in order to return user back after log in completion
-           return false
-        }
-      })
-    )
+    return true;
   }
+
+  // User not loaded → wait for the user-info request to finish
+  const user = await firstValueFrom(
+    accountService.getUserInfo()
+  );
+
+  // User exists → getUserInfo() has already set currentUser
+  if (user) {
+    return true;
+  }
+
+  // No user → anonymous → redirect to login
+    snackbar.error("You are not authenticated, Please log in.")
+  return router.createUrlTree(
+    ['/account/login'],
+    {
+      queryParams: { returnUrl: state.url }
+    }
+  );
 };

@@ -10,7 +10,9 @@
 
             <a routerLink="/shop" routerLinkActive="active">Shop</a>
             <a routerLink="/test-error" routerLinkActive="active">Errors</a>
+            <a *appIsAdmin routerLink="/admin" routerLinkActive="active">Admin</a>
         </nav>
+
         <!-- align-middle probably redundant -->
         <div class="flex gap-3 align-middle items-center"> 
             <a routerLink="/cart"
@@ -51,11 +53,13 @@
 
 </header>
 
-@if (busyService.loading) {
-    <mat-progress-bar mode="indeterminate" class="max-h-20 top-20 fixed z-50" ></mat-progress-bar>
-}
-
+<mat-progress-bar
+    mode="indeterminate"
+    class="fixed top-20 left-0 w-full z-50"
+    [class.invisible]="!busyService.loading">
+</mat-progress-bar>
 <!-- 
+  [class.invisible]      → Keep the progress bar in the DOM; Tailwind's invisible hides it without removing it
   fixed       → stays in place on scroll (position: fixed)
   top-0       → pinned to very top of screen
   z-50        → stacks above all page content (z-index: 50)

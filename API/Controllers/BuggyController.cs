@@ -36,14 +36,31 @@ namespace API.Controllers
         {
             return Ok();
         }
-        [Authorize]
 
+        [Authorize]
         [HttpGet("secret")]   // Test endpoint that requires authorization.
         public IActionResult GetSecret()
         {
             var name = User.FindFirst(ClaimTypes.Name)?.Value;
             var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             return Ok("Hello " + name + "with the id " + id);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin-secret")]   // Test endpoint that requires authorization.
+        public IActionResult GetAdminSecret()
+        {
+            var name = User.FindFirst(ClaimTypes.Name)?.Value;
+            var id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var isAdmin = User.IsInRole("Admin");
+            var roles = User.FindFirstValue(ClaimTypes.Role);
+            return Ok(new
+            {
+                name,
+                id,
+                isAdmin,
+                roles
+            });
         }
     }
 }

@@ -2,12 +2,11 @@ import { Component, inject } from '@angular/core';
 import { AccountService } from '../../../core/services/account-service';
 import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatFormField, MatLabel } from '@angular/material/select';
 import { MatButton } from '@angular/material/button';
 import { MatCard } from '@angular/material/card';
-import { MatInput, MatInputModule } from '@angular/material/input';
 import { Snackbar } from '../../../core/services/snackbar';
 import { TextInput } from "../../../shared/components/text-input/text-input";
+import { NgIf } from '../../../../../node_modules/@angular/common/types/_common_module-chunk';
 
 @Component({
   selector: 'app-register',
@@ -18,7 +17,7 @@ import { TextInput } from "../../../shared/components/text-input/text-input";
     // MatInput,
     // MatLabel,
     MatButton,
-    TextInput,
+    TextInput
 ],
   templateUrl: './register.html',
   styleUrl: './register.css',
@@ -29,6 +28,8 @@ export class Register {
   private router = inject(Router)
   private snack = inject(Snackbar)
   validationErrors?: string[]
+  hidePassword = true
+
 
   registerForm = this.fb.group({
     firstName: ['', Validators.required],
@@ -46,10 +47,13 @@ export class Register {
       },
       error: errors => this.validationErrors = errors
     })
-
   }
 
 
+
+  togglePassword() {
+    this.hidePassword = !this.hidePassword
+  }
   
 
 }

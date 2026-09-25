@@ -5,6 +5,7 @@ import { MatFormField, MatInput, MatLabel } from '@angular/material/input';
 import { MatButton } from '@angular/material/button';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatCard } from '@angular/material/card';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-login',
@@ -40,13 +41,18 @@ export class Login {
 
   })
 
-  onSubmit() {
-    this.accountService.login(this.loginForm.value).subscribe({
-      next: () => {
-        this.accountService.getUserInfo().subscribe()
-        this.router.navigateByUrl(this.returnUrl)
-      }
-    })
+  async onSubmit() {
+    await firstValueFrom(this.accountService.login(this.loginForm.value))
+
+    await firstValueFrom(this.accountService.getUserInfo())
+
+    if (this.accountService.isAdmin()) {
+      this.router.navigateByUrl('/admin')
+      return
+    }
+     this.router.navigateByUrl(this.returnUrl);
   }
+
+  
 
 }

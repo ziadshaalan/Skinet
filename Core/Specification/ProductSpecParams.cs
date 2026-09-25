@@ -10,18 +10,8 @@ using System.Threading.Tasks;
 
 namespace Core.Specification
 {
-    public class ProductSpecParams
+    public class ProductSpecParams : PagingParams
     {
-        private const int MaxPageSize = 50;
-        public int PageIndex { get; set; } = 1;
-
-        private int _pageSize = 6;
-        public int PageSize
-        {
-            get => _pageSize;
-            set => _pageSize = (value > MaxPageSize) ? MaxPageSize : value;
-        }
-
 
         //Point of private backing field: If you used an auto-property public List<string> Brands { get; set; } — you can't inject logic in the setter. That's the only reason the backing field exists here, Other uses for (Validations on set)
 

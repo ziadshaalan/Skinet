@@ -20,6 +20,7 @@
 }
 
 html {
+  scrollbar-gutter: stable;
   height: 100%;
   @include mat.theme((
     color: (
@@ -28,6 +29,7 @@ html {
     ),
     typography: Roboto,
     density: 0,
+    
   ));
 
   

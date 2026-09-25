@@ -1,8 +1,8 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Address, User } from '../../shared/models/user';
-import { map, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { Signalr } from './signalr';
 
 @Injectable({
@@ -13,6 +13,20 @@ export class AccountService {
   private http = inject(HttpClient)
   private signalrService = inject(Signalr)
   currentUser = signal<User | null>(null)
+
+// Derived reactive value.
+// ngular recalculates this whenever currentUser changes.
+//  // Handle two possible formats:
+    //
+    // roles = ["Admin", "Member"]
+    //        → check whether "Admin" exists
+    //
+    // roles = "Admin"
+    //        → directly compare with "Admin"
+  isAdmin = computed(() => {
+    const roles = this.currentUser()?.roles
+    return Array.isArray(roles) ? roles.includes("Admin") : roles === "Admin"
+  })
   
 
     // withCredentials here is now redundant — authInterceptor adds it to every request automatically
@@ -36,13 +50,17 @@ export class AccountService {
     )
   }
 
-  getUserInfo() {
-    return this.http.get<User>(this.baseUrl + 'account/user-info', {withCredentials: true}).pipe(
-       // tap = side effect only, does NOT change what gets emitted downstream 
+
+     // tap = side effect only, does NOT change what gets emitted downstream 
          // (use map only if you need to transform the value itself)
          //Transform means = take the input and turn it into something different, then pass that new thing downstream.
         //Side effect means = do something extra (logging, updating a signal, calling another function) without changing what's actually flowing through the pipe.
-         tap(user => this.currentUser.set(user))
+  getUserInfo() {
+    return this.http.get<User>(this.baseUrl + 'account/user-info', {withCredentials: true}).pipe(
+    
+         tap(user => {
+          this.currentUser.set(user)
+         })
          // returns an Observable (lazy) — does nothing until subscribed
   // lets this method be reused inside forkJoin AND called standalone elsewhere
     )

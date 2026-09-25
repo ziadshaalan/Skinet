@@ -1,0 +1,9 @@
+.cancel {
+    color: rgb(19, 19, 195);
+    border-color: rgb(17, 17, 190);
+}
+
+.confirm {
+    color: #d32f2f;
+    border-color: #d32f2f;
+}

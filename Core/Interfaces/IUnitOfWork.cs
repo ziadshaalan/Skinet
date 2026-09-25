@@ -10,7 +10,14 @@ namespace Core.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
-        IGenericRepository<TEntity> Repository<TEntity>() where TEntity : BaseEntity;
-        Task<bool> Complete();
+
+        // Gives us the repository for whatever entity we need.
+        // All repositories created by the UnitOfWork use the same DbContext.
+        IGenericRepository<TEntity> Repository<TEntity>()
+            where TEntity : BaseEntity;           //This restricts the method -- Meaning You can't do: unit.Repository<string>()
+
+// The single place where changes are committed to the database.
+// This prevents each repository from saving independently.
+Task<bool> Complete();
     }
 }

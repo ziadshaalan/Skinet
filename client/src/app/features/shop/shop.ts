@@ -15,9 +15,9 @@ import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
-  //Products = signal<Product[]>([]);  ==> if signal used instead of zone 
+//Products = signal<Product[]>([]);  ==> if signal used instead of zone 
 // observable: a stream of data that is lazy — does nothing until you subscribe
-    // .subscribe() is what triggers the actual API call and delivers the data
+// .subscribe() is what triggers the actual API call and delivers the data
 @Component({
   selector: 'app-shop',
   imports: [
@@ -31,7 +31,7 @@ import { EmptyState } from '../../shared/components/empty-state/empty-state';
     MatPaginator,
     FormsModule,
     EmptyState
-],
+  ],
   templateUrl: './shop.html',
   styleUrl: './shop.css',
 })
@@ -44,22 +44,22 @@ export class Shop implements OnInit {
   // MASTER variables — source of truth for active filters
   // selectedBrands: string[] = []
   // selectedTypes: string[] = []
-// Track which one is currently active
+  // Track which one is currently active
   // selectedSort: string = 'name'   // default
 
   shopParams = new ShopParams()
 
-  pageSizeOptions = [5,10,15,20]
-  
+  pageSizeOptions = [5, 10, 15, 20]
+
   sortOptions = [   // An array of objects — each has a display name and an API value
-    {name: 'Alphabetical', value: 'name'},
-    {name: 'Low-High', value: 'priceAsc'},
-    {name: 'High-Low', value: 'priceDesc'},
+    { name: 'Alphabetical', value: 'name' },
+    { name: 'Low-High', value: 'priceAsc' },
+    { name: 'High-Low', value: 'priceDesc' },
 
   ]
-    
+
   ngOnInit(): void {
-    this.initializeShop() 
+    this.initializeShop()
   }
 
   initializeShop() {
@@ -77,16 +77,16 @@ export class Shop implements OnInit {
     this.shopService.getProducts(this.shopParams).subscribe({
       next: response => this.products = response,
       error: error => console.log(error),
-    }) 
+    })
   }
 
   handlePageEvent(event: PageEvent) {
     this.shopParams.pageNumber = event.pageIndex + 1
     this.shopParams.pageSize = event.pageSize
-    this.getProducts() 
-}
+    this.getProducts()
+  }
 
-private searchTerms = new Subject<string>()  // stream of keystrokes
+  private searchTerms = new Subject<string>()  // stream of keystrokes
 
   constructor() {
     // listen to the stream, wait 400ms of silence, then search
@@ -101,10 +101,10 @@ private searchTerms = new Subject<string>()  // stream of keystrokes
 
   onSearchChange() {
     this.searchTerms.next(this.shopParams.search)  // push keystroke into stream
-}
+  }
 
   onSortChange(event: MatSelectionListChange) {
-     // event.options = array of all changed options
+    // event.options = array of all changed options
     // [0] = first (and only, since multiple=false) changed option
     const selectedOption = event.options[0]
     if (selectedOption) {
@@ -116,24 +116,24 @@ private searchTerms = new Subject<string>()  // stream of keystrokes
   }
 
   openFiltersDialog() {
-    // open dialog and pass current master selections as initial data
+    // Send the current filters to the dialog as initial data.
     const dialogRef = this.dialogService.open(FiltersDialog, {
       minWidth: '500px',  
       data: {
         selectedBrands: this.shopParams.brands,  // shop's current selections → sent into dialog
         selectedTypes: this.shopParams.types
-      } 
+      }
     });
+    // Wait for the dialog to close and receive the result returned by close().
     dialogRef.afterClosed().subscribe({
       next: result => {
-        if(result){
-          console.log(result)
-           // result = object passed into close() from FiltersDialog
-          // update master variables with user's selections
-          this.shopParams.brands = result.selectedBrands
-          this.shopParams.types= result.selectedTypes 
+        if (result) {
+          // Update the main shop filters with the values selected in the dialog.
+          this.shopParams.brands = result.brandsSelected
+          this.shopParams.types = result.typesSelected
+          // Start from the first page after changing filters.
           this.shopParams.pageNumber = 1
-         this.getProducts()
+          this.getProducts()
 
         }
       }
