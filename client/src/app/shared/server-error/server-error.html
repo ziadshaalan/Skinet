@@ -1,4 +1,11 @@
-<div class="container mt-5" p-4 bg-gray-100 rounded shadow-lg>
+<!--
+  Two bugs fixed here:
+  1. `p-4 bg-gray-100 rounded shadow-lg` sat OUTSIDE the class="" quotes, so it was parsed as
+     literal HTML attributes and did nothing at all. No padding, no background.
+  2. `container` is already applied by app.html around the router outlet, so nesting it again
+     doubled the side padding.
+-->
+<div class="mt-5 p-4 bg-gray-100 rounded shadow-lg break-words">
     <h1 class="text-2xl font-semibold mb-4">Internal server error</h1>
 
     @if (error) {

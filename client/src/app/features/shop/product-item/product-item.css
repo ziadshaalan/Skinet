@@ -2,8 +2,15 @@
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.product-card:hover{
-    transform: translateY(-10px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.23);
-    cursor: pointer;
+/*
+  Only lift the card on devices that actually support hover.
+  On touch devices :hover can stick after a tap, and the transform just jitters
+  while the user scrolls.
+*/
+@media (hover: hover) {
+    .product-card:hover{
+        transform: translateY(-10px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.23);
+        cursor: pointer;
+    }
 }

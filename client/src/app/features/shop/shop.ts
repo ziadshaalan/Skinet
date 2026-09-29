@@ -117,8 +117,12 @@ export class Shop implements OnInit {
 
   openFiltersDialog() {
     // Send the current filters to the dialog as initial data.
+    // width used to be minWidth: '500px', which is WIDER than a 375px phone screen, so the
+    // dialog was clipped off-screen on mobile. min(500px, 95vw) keeps the desktop width but
+    // never exceeds the viewport. min() is plain CSS, so no BreakpointObserver needed.
     const dialogRef = this.dialogService.open(FiltersDialog, {
-      minWidth: '500px',  
+      width: 'min(500px, 95vw)',
+      maxWidth: '95vw',
       data: {
         selectedBrands: this.shopParams.brands,  // shop's current selections → sent into dialog
         selectedTypes: this.shopParams.types

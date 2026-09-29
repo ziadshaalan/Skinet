@@ -48,10 +48,12 @@ namespace API
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));  //typeof keyword added bcus return type of these genrric files are unknown 
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-            builder.Services.AddScoped<ICartService, CartService>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
             builder.Services.AddScoped<ICouponService, CouponService>();
             builder.Services.AddSignalR();
+
+            builder.Services.AddScoped<ICartService, CartService>();
+            builder.Services.AddSingleton<IResponseCacheService, ResponseCache>();  //Create one ResponseCache instance and reuse that same instance whenever IResponseCacheService is requested.
 
 
             builder.Services.AddAuthorization();
@@ -86,7 +88,11 @@ namespace API
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()
-            .WithOrigins("http://localhost:4200", "https://localhost:4200"));
+            .WithOrigins(
+            "http://localhost:4200",
+            "https://localhost:4200",
+            "http://192.168.1.7:4200"));
+
             // With that web browser will allow us to request the data from our API and display it on the page.
             //without it request can go to our API server but a browser secuirty feature will prevent us from loading the data into the browser.
 

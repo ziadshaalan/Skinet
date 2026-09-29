@@ -1,60 +1,70 @@
 @if (products && products.count > 0) {
 <div class="flex flex-col gap-3">
-  <div class="flex justify-between">
-    <div>
-       <!--(page)="handlePageEvent($event)" listens to paginator event and sends PageEvent to component -->
-      <mat-paginator
-      (page)="handlePageEvent($event)"  
-      [pageIndex]="shopParams.pageNumber - 1"
-      [pageSize]="shopParams.pageSize"
-      [length]="products.count"
-      [pageSizeOptions]="pageSizeOptions"
-      [showFirstLastButtons]="true"
-      aria-label="Select page"
-      >
+  <!--
+    Three direct children of this flex row so that the desktop arrangement is
+    unchanged (paginator left, search centre, buttons right) while phones simply
+    stack them into three full-width rows. flex-col on mobile, flex-row from lg up.
+  -->
+  <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 
-      </mat-paginator>
-    </div>
+    <!--(page)="handlePageEvent($event)" listens to paginator event and sends PageEvent to component -->
+    <mat-paginator
+    (page)="handlePageEvent($event)"
+    [pageIndex]="shopParams.pageNumber - 1"
+    [pageSize]="shopParams.pageSize"
+    [length]="products.count"
+    [pageSizeOptions]="pageSizeOptions"
+    [showFirstLastButtons]="true"
+    aria-label="Select page"
+    >
+    </mat-paginator>
 
-   <div>
-  <form #searchForm="ngForm" class="relative flex items-center w-full max-w-md mx-4">
     <!-- removed (ngSubmit) — form no longer triggers search on Enter/button click -->
-    <input 
-        type="search"
-        class="block w-full p-3 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:border-blue-500"
-        placeholder="Search" 
-        name="search"
-        [(ngModel)]="shopParams.search"
-        (ngModelChange)="onSearchChange()" />
+    <!-- w-full on phones (was a fixed max-w-md + mx-4 = 480px, wider than a 375px screen) -->
+    <form #searchForm="ngForm" class="relative flex w-full items-center lg:mx-4 lg:max-w-md">
+      <input
+          type="search"
+          class="block w-full p-3 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:border-blue-500"
+          placeholder="Search"
+          name="search"
+          [(ngModel)]="shopParams.search"
+          (ngModelChange)="onSearchChange()" />
         <!-- (ngModelChange) — fires onSearchChange() on every keystroke instead of form submit -->
           <!-- type changed from "submit" to "button" — no longer submits the form -->
-     <mat-icon class="absolute right-3 top-3 text-gray-500">search</mat-icon>
-  </form>
-</div>
+      <mat-icon class="absolute right-3 top-3 text-gray-500">search</mat-icon>
+    </form>
 
-    <div class="flex gap-3">
+    <!--
+      Wrapper div carries the responsive classes because Material's own button styles
+      outrank Tailwind's single-class utilities — see the note at the top of header.html.
+    -->
+    <div class="flex w-full gap-2 lg:w-auto lg:gap-3">
       <button mat-stroked-button (click)="openFiltersDialog()">
-      <mat-icon>filter_list</mat-icon>
-      Filters
-    </button>
-<!-- Button that opens the menu -->
-<!-- [matMenuTriggerFor] links this button to #sortMenu below -->
-    <button mat-stroked-button [matMenuTriggerFor]="sortMenu">
-      <mat-icon>swap_vert</mat-icon> 
-      Sort
-    </button>
+        <mat-icon>filter_list</mat-icon>
+        Filters
+      </button>
+      <!-- Button that opens the menu -->
+      <!-- [matMenuTriggerFor] links this button to #sortMenu below -->
+      <button mat-stroked-button [matMenuTriggerFor]="sortMenu">
+        <mat-icon>swap_vert</mat-icon>
+        Sort
+      </button>
     </div>
-    
   </div>
 
-  <div class="grid grid-cols-5 gap-4 ">
+  <!--
+    Was a hard-coded grid-cols-5: on a 375px phone that is ~65px per card, so the
+    images were crushed and the "Add to cart" text overflowed the card.
+    Mobile-first: 2 columns on phones, scaling up to the original 5 on wide screens.
+  -->
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 xl:grid-cols-5">
     @for (product of products.data; track product.id) {
       <app-product-item [product]="product"></app-product-item>
     }
 </div>
 </div>
 <!--(#) is a template reference variable — it gives a name to an element so you can reference it elsewhere in the same template.-->
-<mat-menu #sortMenu = "matMenu">  
+<mat-menu #sortMenu = "matMenu">
   <mat-selection-list [multiple]="false"  #sortList (selectionChange)="onSortChange($event)">
     @for (sort of sortOptions; track $index) {
       <!-- [value]="sort.value" = what gets stored when selected -->
@@ -77,10 +87,3 @@
     (action)="resetFilters()"
    />
 }
-
-
-
-
-
-
- 

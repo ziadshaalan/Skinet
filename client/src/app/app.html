@@ -1,4 +1,10 @@
 <app-header></app-header>
-<div class="container mt-24">
+<!--
+  mt-20 / lg:mt-24 rather than mt-16 / lg:mt-20.
+  The header is fixed and is h-16 on phones, h-20 from lg up, so those values only
+  cleared the header exactly and left the first element butted up against it.
+  80 - 64 = 16px of breathing room on phones, 96 - 80 = 16px on desktop.
+-->
+<div class="container mt-20 lg:mt-24">
     <router-outlet></router-outlet>
 </div>

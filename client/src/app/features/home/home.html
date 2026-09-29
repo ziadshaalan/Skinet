@@ -1,15 +1,19 @@
-<div class="max-w-screen-2xl mx-auto px-4 mt-32">
-    <div class="flex flex-col items-center py-16 justify-center mt-20 rounded-2xl 
-        shadow-xl relative">
+<!-- mt-32 removed: app.html already offsets for the fixed header.
+     max-w-screen-2xl was a removed Tailwind v3 utility and generated no CSS in v4;
+     max-w-[1536px] is the working v4 equivalent. -->
+<div class="max-w-[1536px] mx-auto px-4">
+    <div class="flex flex-col items-center py-10 justify-center mt-16 rounded-2xl
+        shadow-xl relative sm:py-16 sm:mt-20">
         <img class="absolute inset-0 w-full h-full object-cover rounded-2xl"
             src="../images/hero1.jpg" alt="ski resort image">
-        <div class="flex flex-col p-8 rounded-2xl items-center relative">
-            <h1 class="my-6 font-extrabold text-white text-6xl">
+        <!-- text-6xl is ~60px per character and overflowed a 375px screen, hence text-4xl -->
+        <div class="flex flex-col p-4 sm:p-8 rounded-2xl items-center relative">
+            <h1 class="my-6 font-extrabold text-white text-center text-4xl sm:text-6xl">
                 Welcome to SkiNet!
             </h1>
-            <button class="bg-linear-to-r from-blue-600 to-cyan-500 font-semibold 
-                    text-2xl text-white 
-                    rounded-2xl px-8 py-4 border-2 border-transparent mt-8"
+            <button class="bg-linear-to-r from-blue-600 to-cyan-500 font-semibold
+                    text-lg sm:text-2xl text-white
+                    rounded-2xl px-6 sm:px-8 py-3 sm:py-4 border-2 border-transparent mt-8"
                 routerLink="/shop">
                 Go shopping
             </button>

@@ -1,13 +1,40 @@
+<!--
+  Was a single non-wrapping row: 80px image + name + quantity stepper + a w-32 price cell
+  needs ~416px including the card padding, so it overflowed a 375px phone.
+
+  Now the quantity stepper and price sit on their own full-width row below the image and
+  name, and the three items go back on one line from lg up. flex-wrap does the work, so
+  nothing needs a media query in TypeScript.
+-->
 <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm mb-4">
-    <div class="flex items-center justify-between gap-6">
-        <a routerLink="/shop/{{item().productId}}" class=" shrink order-1">
-            <img class="h-20 w-20" src="{{item().pictureUrl}}"
+    <div class="flex flex-wrap items-center justify-between gap-3 lg:gap-6">
+        <a routerLink="/shop/{{item().productId}}" class="shrink-0 order-1">
+            <img class="h-20 w-20 object-cover rounded" src="{{item().pictureUrl}}"
                 alt="product image">
         </a>
-        <div class="flex items-center justify-between order-3">
+
+        <!-- min-w-0 lets the name shrink and wrap its text instead of forcing overflow -->
+        <div class="order-2 min-w-0 flex-1 space-y-2 lg:max-w-md">
+            <a routerLink="/shop/{{item().productId}}" class="font-medium block">
+                {{item().productName}}
+            </a>
+
+            <div class="flex items-center gap-4">
+                <!-- (click) moved from the <mat-icon> onto the button so the whole 48px
+                     target is tappable, not just the glyph -->
+                <button (click)="removeItemFromCart()" mat-button
+                    class="text-red-700! flex gap-2 items-center">
+                    <mat-icon>delete</mat-icon>
+                    <span>Delete</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- w-full forces this onto its own row on phones; lg:w-auto puts it back inline -->
+        <div class="order-3 flex w-full items-center justify-between gap-3 lg:w-auto lg:gap-6">
             <div class="flex items-center align-middle gap-3">
-                <button mat-icon-button>
-                    <mat-icon class="text-red-600!" (click)="decrementQuantity()">remove</mat-icon>
+                <button mat-icon-button (click)="decrementQuantity()">
+                    <mat-icon class="text-red-600!">remove</mat-icon>
                 </button>
 
                 <div class="font-semibold text-xl mb-1">
@@ -18,24 +45,10 @@
                 </button>
             </div>
 
-            <div class="text-end w-32">
+            <div class="text-end w-24 lg:w-32">
                 <p class="font-bold text-xl text-gray-900!">{{item().price |
                     currency}}</p>
             </div>
         </div>
-
-        <div class="w-full flex flex-col flex-1 space-y-4 order-2 max-w-md">
-            <a routerLink="/shop/{{item().productId}}" class="font-medium">
-                {{item().productName}}
-            </a>
-
-            <div class="flex items-center gap-4">
-                <button (click)="removeItemFromCart()" mat-button class="text-red-700! flex gap-2 items-center">
-                    <mat-icon>delete</mat-icon>
-                    <span>Delete</span>
-                </button>
-            </div>
-        </div>
-
     </div>
 </div>

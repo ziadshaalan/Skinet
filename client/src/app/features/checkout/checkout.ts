@@ -1,5 +1,7 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import {MatStepper, MatStepperModule} from '@angular/material/stepper';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import {MatStepper, MatStepperModule, StepperOrientation} from '@angular/material/stepper';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { OrderSummary } from "../../shared/components/order-summary/order-summary";
 import { Router, RouterLink } from "@angular/router";
 import { MatAnchor, MatButton } from "@angular/material/button";
@@ -10,7 +12,7 @@ import {MatCheckboxChange, MatCheckboxModule} from '@angular/material/checkbox';
 import { StepperSelectionEvent } from '@angular/cdk/stepper';
 import { Address } from '../../shared/models/user';
 import { AccountService } from '../../core/services/account-service';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, map } from 'rxjs';
 import { CheckoutDelivery } from "./checkout-delivery/checkout-delivery";
 import { CheckoutReview } from "./checkout-review/checkout-review";
 import { CartService } from '../../core/services/cart-service';
@@ -51,6 +53,22 @@ export class Checkout implements OnInit, OnDestroy {
   )
   confirmationToken?: ConfirmationToken
   loading = false
+
+  // A horizontal stepper needs room for four step labels in a row, which a phone does not
+  // have, so the stepper flips to a vertical layout below Tailwind's lg breakpoint.
+  // 1023px is deliberately one pixel under lg (64rem = 1024px) so the two agree exactly.
+  // toSignal() keeps the subscription alive for the component's lifetime and cleans up on destroy.
+  private breakpointObserver = inject(BreakpointObserver)
+  isMobile = toSignal(
+    this.breakpointObserver.observe('(max-width: 1023px)').pipe(map(result => result.matches)),
+    { initialValue: false }
+  );
+
+  // Typed as StepperOrientation ('horizontal' | 'vertical') because strictTemplates is on
+  // in tsconfig.json, so a bare string ternary in the template would not be trusted.
+  stepperOrientation = computed<StepperOrientation>(() =>
+    this.isMobile() ? 'vertical' : 'horizontal'
+  );
 
 async ngOnInit() {
   

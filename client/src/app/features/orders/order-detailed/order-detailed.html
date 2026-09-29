@@ -2,11 +2,14 @@
 <mat-card class="bg-white py-8 shadow-md max-w-5xl mx-auto">
 
     <div class="px-4 w-full">
-        <div class="flex justify-between items-center align-middle">
+        <!-- title and back button stack on phones instead of fighting for one line -->
+        <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-between sm:items-center">
             <h2 class="text-2xl text-center font-semibold">Order summary for order #{{order.id}}</h2>
             <button (click)="onReturnClick()" mat-stroked-button>{{buttonText}}</button>
         </div>
-        <div class="flex gap-16 space-t border-gray-200 py-3 mt-8">
+        <!-- was a fixed gap-16 two-column row: on a 375px phone that left ~150px per
+             column. Stacked on phones, side by side from lg up. -->
+        <div class="flex flex-col gap-6 space-t border-gray-200 py-3 mt-8 lg:flex-row lg:gap-16">
             <div class="space-y-2 ">
                 <h4 class="text-lg font-semibold">Billing and delivery information</h4>
                 <dl>
@@ -43,12 +46,12 @@
                         <tr>
                             <td class="py-4">
                                 <div class="flex items-center gap-4">
-                                    <img src="{{item.pictureUrl}}" alt="product image" class="w-10 h-10">
-                                    <span>{{ item.productName }}</span>
+                                    <img src="{{item.pictureUrl}}" alt="product image" class="w-10 h-10 object-cover rounded shrink-0">
+                                    <span class="text-left">{{ item.productName }}</span>
                                 </div>
                             </td>
-                            <td class="p-4">x{{ item.quantity }}</td>
-                            <td class="p-4 text-right">{{ item.price | currency }}</td>
+                            <td class="p-2 sm:p-4">x{{ item.quantity }}</td>
+                            <td class="p-2 sm:p-4 text-right">{{ item.price | currency }}</td>
                         </tr>
                         }
                     </tbody>

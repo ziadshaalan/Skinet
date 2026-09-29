@@ -68,3 +68,32 @@ body {
      supporting-text-color: white
   ))
 }
+
+/*
+  Confirmation toast for add-to-cart (see Snackbar.addedToCart()).
+  Green so it reads as a success, but deliberately calm: no action button is rendered
+  and the duration is short, so it slides away on its own instead of demanding attention.
+*/
+.snack-notice{
+  @include mat.snack-bar-overrides((
+    container-color: #166534,
+    supporting-text-color: white,
+    button-color: white,
+    container-shape: 12px
+  ))
+}
+
+/*
+  Material hard-codes `.mat-mdc-snack-bar-container .mat-mdc-snackbar-surface` to
+  `min-width: 344px`, and the container then adds 16px of margin. That is 376px, which is
+  wider than a 375px phone, so the toast used to hang off the right edge of the screen.
+
+  Letting the surface shrink to its content fixes it at every size. Material's own
+  `max-width: 672px` is untouched, so the toast still caps out sensibly on desktop.
+
+  Three classes are used deliberately: this out-specifies Material's two-class rule
+  (0,3,0 beats 0,2,0) without needing !important.
+*/
+.mat-mdc-snack-bar-container.snack-notice .mat-mdc-snackbar-surface {
+  min-width: 0;
+}

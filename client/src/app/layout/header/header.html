@@ -1,68 +1,155 @@
-<header class="shadow-md p-3 w-full max-h-20 fixed top-0 z-50 bg-white">
-    <div class="flex align-middle items-center justify-between max-w-screen-2xl mx-auto">
-        <img routerLink="/" src="images/logo.png" alt="app logo" class="max-h-16">
-        <nav class="flex gap-3 my-2 uppercase text-xl">
-            <!--[routerLinkActiveOptions]="{exact: true} Asks "Is the current URL exactly /?"-->
-            <a routerLink="/"
-             routerLinkActive="active"
-             [routerLinkActiveOptions]="{exact: true}"  
-            >Home</a>
+<!--
+  Responsive header.
 
-            <a routerLink="/shop" routerLinkActive="active">Shop</a>
-            <a routerLink="/test-error" routerLinkActive="active">Errors</a>
-            <a *appIsAdmin routerLink="/admin" routerLinkActive="active">Admin</a>
-        </nav>
+  Two things to know about this file:
 
-        <!-- align-middle probably redundant -->
-        <div class="flex gap-3 align-middle items-center"> 
-            <a routerLink="/cart"
-            routerLinkActive="active"
-             matBadge="{{cartService.itemCount()}}"
-             class="custom-badge mt-2 mr-2">
-                <mat-icon>shopping_cart</mat-icon>
-            </a>
-            @if (accountService.currentUser()) {
-            <div  class="px-6">
-                <button mat-button [matMenuTriggerFor]="menu">
-                    <mat-icon>arrow_drop_down</mat-icon>
-                    <span>{{accountService.currentUser()?.email}}</span>
-                </button>
-                <mat-menu #menu="matMenu" class="px-3">
-                    <button mat-menu-item routerLink="/cart">
-                        <mat-icon>shopping_cart</mat-icon>
-                        My cart
-                    </button>
-                    <button mat-menu-item routerLink="/orders">
-                        <mat-icon>history</mat-icon>
-                        View Orders
-                    </button>
-                    <mat-divider></mat-divider>
-                    <button mat-menu-item (click)="logout()">
-                        <mat-icon>logout</mat-icon>
-                        Logout</button>
-                </mat-menu>
-            </div>
-            } @else {
-            <button routerLink="account/login" mat-stroked-button>Login</button>
-            <button routerLink="account/register" mat-stroked-button>Register</button>   
-            }
-                
+  1. The header now owns its height (h-16 on phones, h-20 from lg up) and the loading
+     bar is absolutely positioned against the header's bottom edge. That removes the
+     old `fixed top-20` magic number, which broke the moment the header height changed
+     per breakpoint. app.html only needs `mt-16 lg:mt-20` to clear it.
+
+  2. Material components are wrapped in a plain <div> whenever they need to be shown or
+     hidden at a breakpoint. This is deliberate: Material's own styles are compiled with
+     Angular's view encapsulation (`.mat-mdc-button[_ngcontent-abc]`, specificity 0,2,0)
+     which BEATS Tailwind's single-class utilities like `hidden` (0,1,0). A bare
+     `class="hidden lg:flex"` on a <button mat-button> would simply not work — the
+     wrapper div has no Material styles on it, so `hidden` applies normally.
+-->
+<header class="fixed top-0 z-50 w-full bg-white shadow-md">
+  <div class="mx-auto flex h-16 max-w-[1536px] items-center justify-between gap-2 px-4 lg:h-20 lg:px-6">
+    <img routerLink="/" src="images/logo.png" alt="app logo" class="max-h-10 lg:max-h-16">
+
+    <!-- Full navigation from lg up -->
+    <nav class="hidden gap-3 uppercase text-xl lg:flex lg:my-2">
+      <!--[routerLinkActiveOptions]="{exact: true}" Asks "Is the current URL exactly /?"-->
+      <a routerLink="/"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{exact: true}">Home</a>
+
+      <a routerLink="/shop" routerLinkActive="active">Shop</a>
+      <a routerLink="/test-error" routerLinkActive="active">Errors</a>
+      <a *appIsAdmin routerLink="/admin" routerLinkActive="active">Admin</a>
+    </nav>
+
+    <div class="flex items-center gap-2 lg:gap-4">
+      <!--
+        gap-2/lg:gap-4 instead of gap-1/lg:gap-3: the cart badge is a 24x24px circle
+        absolutely positioned at the icon's top-right, so with a tight gap the count
+        visually collided with the neighbouring icon. The old `lg:mr-2` is dropped
+        because the flex gap now provides that spacing. `lg:mt-2` is kept: the badge
+        hangs above the icon, so it needs vertical room and would clip on a tight row.
+      -->
+
+      <a routerLink="/cart"
+         routerLinkActive="active"
+         matBadge="{{cartService.itemCount()}}"
+         class="custom-badge lg:mt-2"
+         aria-label="My cart">
+        <mat-icon>shopping_cart</mat-icon>
+      </a>
+
+      @if (accountService.currentUser()) {
+        <!-- desktop: email dropdown -->
+        <div class="hidden lg:block">
+          <button mat-button [matMenuTriggerFor]="accountMenu">
+            <mat-icon>arrow_drop_down</mat-icon>
+            <span>{{accountService.currentUser()?.email}}</span>
+          </button>
         </div>
-        
-    </div>
+        <!-- mobile: icon only, opens the same menu -->
+        <div class="lg:hidden">
+          <button mat-icon-button [matMenuTriggerFor]="accountMenu" aria-label="Account">
+            <mat-icon>account_circle</mat-icon>
+          </button>
+        </div>
+      } @else {
+        <div class="hidden gap-3 lg:flex">
+          <button routerLink="account/login" mat-stroked-button>Login</button>
+          <button routerLink="account/register" mat-stroked-button>Register</button>
+        </div>
+      }
 
+      <!-- hamburger: phones and tablets -->
+      <div class="lg:hidden">
+        <button mat-icon-button [matMenuTriggerFor]="mobileMenu" aria-label="Open menu">
+          <mat-icon>menu</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!--
+    Wrapped in a div so the absolute positioning lands on this element, not on the
+    <mat-progress-bar> host (Material forces position: relative on it).
+  -->
+  <div class="absolute bottom-0 left-0 w-full">
+    <mat-progress-bar
+      mode="indeterminate"
+      [class.invisible]="!busyService.loading">
+    </mat-progress-bar>
+  </div>
 </header>
 
-<mat-progress-bar
-    mode="indeterminate"
-    class="fixed top-20 left-0 w-full z-50"
-    [class.invisible]="!busyService.loading">
-</mat-progress-bar>
-<!-- 
-  [class.invisible]      → Keep the progress bar in the DOM; Tailwind's invisible hides it without removing it
-  fixed       → stays in place on scroll (position: fixed)
-  top-0       → pinned to very top of screen
-  z-50        → stacks above all page content (z-index: 50)
-  max-h-20    → caps header height at 80px
-  bg-white    → solid background so scrolled content doesn't show through
--->
+<!-- Account actions, opened by both the desktop and the mobile trigger -->
+<mat-menu #accountMenu="matMenu" class="px-3">
+  <button mat-menu-item routerLink="/cart">
+    <mat-icon>shopping_cart</mat-icon>
+    My cart
+  </button>
+  <button mat-menu-item routerLink="/orders">
+    <mat-icon>history</mat-icon>
+    View Orders
+  </button>
+  <mat-divider></mat-divider>
+  <button mat-menu-item (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    Logout
+  </button>
+</mat-menu>
+
+<!-- Navigation for phones and tablets -->
+<mat-menu #mobileMenu="matMenu">
+  <a mat-menu-item
+     routerLink="/"
+     routerLinkActive="active"
+     [routerLinkActiveOptions]="{exact: true}">
+    <mat-icon>home</mat-icon>
+    Home
+  </a>
+
+  <a mat-menu-item routerLink="/shop" routerLinkActive="active">
+    <mat-icon>storefront</mat-icon>
+    Shop
+  </a>
+
+  <a *appIsAdmin mat-menu-item routerLink="/admin" routerLinkActive="active">
+    <mat-icon>admin_panel_settings</mat-icon>
+    Admin
+  </a>
+
+  <mat-divider></mat-divider>
+
+  @if (accountService.currentUser()) {
+    <button mat-menu-item routerLink="/cart">
+      <mat-icon>shopping_cart</mat-icon>
+      My cart
+    </button>
+    <button mat-menu-item routerLink="/orders">
+      <mat-icon>history</mat-icon>
+      View Orders
+    </button>
+    <button mat-menu-item (click)="logout()">
+      <mat-icon>logout</mat-icon>
+      Logout
+    </button>
+  } @else {
+    <button mat-menu-item routerLink="account/login">
+      <mat-icon>login</mat-icon>
+      Login
+    </button>
+    <button mat-menu-item routerLink="account/register">
+      <mat-icon>person_add</mat-icon>
+      Register
+    </button>
+  }
+</mat-menu>

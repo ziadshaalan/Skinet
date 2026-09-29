@@ -1,6 +1,6 @@
   import { Component, inject, OnInit, Pipe } from '@angular/core';
   import { ShopService } from '../../core/services/shop-service';
-  import { ActivatedRoute } from '@angular/router';
+  import { ActivatedRoute, RouterLink } from '@angular/router';
   import { Product } from '../../shared/models/product';
   import { CurrencyPipe } from '@angular/common';
   import { MatButton } from '@angular/material/button';
@@ -20,7 +20,8 @@ import { FormsModule } from '@angular/forms';
       MatFormField,
       MatLabel,
       MatDivider,
-      FormsModule
+      FormsModule,
+      RouterLink   // for the "Back to shop" button at the top of the page
   ],
     templateUrl: './product-details.html',
     styleUrl: './product-details.css',

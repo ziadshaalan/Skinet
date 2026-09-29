@@ -6,6 +6,7 @@ import { Product } from '../../shared/models/product';
 import { firstValueFrom, map, tap } from 'rxjs';
 import { NotFound } from '../../shared/not-found/not-found';
 import { DeliveryMethod } from '../../shared/models/deliveryMethod';
+import { Snackbar } from './snackbar';
 
 @Injectable({
   providedIn: 'root',
@@ -13,6 +14,10 @@ import { DeliveryMethod } from '../../shared/models/deliveryMethod';
 export class CartService {
   baseUrl = environment.apiUrl
   private http = inject(HttpClient)
+  // Used only to fire the "X added to your cart" confirmation toast in addItemToCart().
+  // Safe to inject: Snackbar is providedIn 'root' and only depends on MatSnackBar, so
+  // there is no dependency cycle back to CartService.
+  private snackbar = inject(Snackbar)
   cart = signal<Cart | null>(null)
   
   itemCount = computed(() => { // COMPUTED SIGNAL — auto-updates whenever `cart` changes; drives the cart badge count.
@@ -85,13 +90,25 @@ export class CartService {
 // narrow a union type (CartItem | Product) at runtime, since TypeScript
 // types don't exist in compiled JavaScript.
 
-  async addItemToCart(item: CartItem | Product, quantity = 1) {
+  async addItemToCart(item: CartItem | Product, quantity = 1) { //We need type of cartitem because product contains properties like  description and quantityinstock which wedont need 
     const cart = this.cart() ?? this.createCart()
+
+    // Read the display name BEFORE the block below reassigns `item` to a CartItem.
+    // Needed for the confirmation toast, and the name has to come from whichever
+    // shape the caller passed: Product uses .name, CartItem uses .productName.
+    const productName = this.isProduct(item) ? item.name : item.productName
+
     if (this.isProduct(item)) {
       item = this.mapProductToCartItem(item)
     }
     cart.items = this.addOrUpdateItem(cart.items, item, quantity)
     await firstValueFrom(this.setCart(cart))
+
+    // Confirmed AFTER the await on purpose. setCart() POSTs to the API, so if that call
+    // fails the promise rejects, this line is never reached, and the user is never told
+    // an item was added when it was not. Showing the toast before the await would mean
+    // lying to the user every time the server is down.
+    this.snackbar.addedToCart(productName, quantity)
   }
   
 
@@ -161,11 +178,4 @@ export class CartService {
   getCouponFromAppliedCode(code: string) {
     return this.http.get<Coupon>(this.baseUrl + 'coupons/' + code)
   }
-
-  
-
-  
-
-  
-
 }

@@ -1,21 +1,53 @@
  @if (product) {
-    <mat-card appearance="raised" routerLink="/shop/{{product.id}}" class="product-card">
-            <img src="{{product.pictureUrl}}" class="rounded-t-lg" alt="{{product.name}}">
-            <mat-card-content class="mt-2">
+    <!--
+      h-full! makes the card fill the grid cell it sits in.
+
+      Why this is needed: the shop grid is `grid-cols-N`, and CSS blockifies grid items,
+      so <app-product-item> stretches to the tallest card in the row. But .mat-mdc-card
+      is `display: flex; flex-direction: column` with NO height set, so it was only ever
+      as tall as its own content. Two cards in the same row with a 1-line and a 2-line
+      product name therefore ended up different heights, with their "Add to cart"
+      buttons sitting on different lines.
+
+      height:100% resolves against the stretched grid item, which has a definite height,
+      so every card in the row now matches the tallest one. The `!` is needed because
+      Material's own .mat-mdc-card rules compile through view encapsulation to
+      .mat-mdc-card[_ngcontent-x] (specificity 0,2,0), which outranks a plain Tailwind
+      utility (0,1,0).
+    -->
+    <mat-card appearance="raised" routerLink="/shop/{{product.id}}" class="product-card h-full!">
+            <!--
+              shrink-0 stops the square image from being squashed when a neighbouring
+              card in the same row is taller, and aspect-square + object-cover keeps
+              every image the same shape so the cards line up.
+            -->
+            <img src="{{product.pictureUrl}}"
+                 class="w-full aspect-square object-cover rounded-t-lg shrink-0"
+                 alt="{{product.name}}">
+            <!--
+              flex-1 makes this block absorb whatever extra height the tallest card in the
+              row has, which pushes mat-card-actions (the button) to the bottom of every
+              card and lines the buttons up across the row.
+              .mat-mdc-card-content is `display:block; padding:0 16px` with no flex-grow,
+              so without this the button follows the text straight away.
+            -->
+            <mat-card-content class="mt-2 flex-1">
                 <h2 class="text-sm font-semibold uppercase">{{product.name}}</h2>
                 <p class="font-light">{{product.price | currency}}</p>
             </mat-card-content>
             <mat-card-actions (click) = "$event.stopPropagation()">
-                <button mat-stroked-button class="w-full" (click)="cartService.addItemToCart(product)">
+                <!--
+                  In the 2-column phone grid a card is only ~165px wide, and the icon plus the
+                  "Add to cart" label needs ~154px, so the label used to spill outside the card.
+                  Show the icon alone on phones and keep the full button from sm up. The aria-label
+                  carries the product name so screen readers still announce what it does.
+                -->
+                <button mat-stroked-button class="w-full"
+                        (click)="cartService.addItemToCart(product)"
+                        [attr.aria-label]="'Add ' + product.name + ' to cart'">
                     <mat-icon>add_shopping_cart</mat-icon>
-                    Add to cart
+                    <span class="hidden sm:inline">Add to cart</span>
                 </button>
             </mat-card-actions>
-
-
     </mat-card>
-
-
- }
- 
- 
+}

@@ -12,20 +12,18 @@ using Microsoft.EntityFrameworkCore;
 // business/query logic is not mixed with HTTP concerns
 //delegates query-building to the specification layer
 
+
+// SPECIFICATION PATTERN — how a query gets built and run:
+// 1. ProductSpecification (extends BaseSpecification<T>) describes the query as DATA — Criteria, OrderBy, Skip/Take — no DB code, nothing executes yet
+// 2. GenericRepository<T> receives the spec (ISpecification<T>) and hands it to SpecificationEvaluator<T> — repository itself never builds the query
+// 3. SpecificationEvaluator<T>.GetQuery() reads the spec's rules and chains them onto IQueryable (.Where/.OrderBy/.Skip/.Take) — still just a plan, nothing sent to SQL yet
+// 4. Back in GenericRepository<T>, .ToListAsync() is the ONLY point EF Core (via StoreContext) turns that plan into real SQL and hits the database
+
 namespace API.Controllers
 {
-
-
-
-    // SPECIFICATION PATTERN — how a query gets built and run:
-    // 1. ProductSpecification (extends BaseSpecification<T>) describes the query as DATA — Criteria, OrderBy, Skip/Take — no DB code, nothing executes yet
-    // 2. GenericRepository<T> receives the spec (ISpecification<T>) and hands it to SpecificationEvaluator<T> — repository itself never builds the query
-    // 3. SpecificationEvaluator<T>.GetQuery() reads the spec's rules and chains them onto IQueryable (.Where/.OrderBy/.Skip/.Take) — still just a plan, nothing sent to SQL yet
-    // 4. Back in GenericRepository<T>, .ToListAsync() is the ONLY point EF Core (via StoreContext) turns that plan into real SQL and hits the database
-
     public class ProductsController(IUnitOfWork unit) : BaseApiController
     {
-        
+        [Cache(600)]
         [HttpGet]
         public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts([FromQuery]ProductSpecParams productParams)
         // IReadOnlyList has Count, index access [i], and data is fully loaded in memory upfront
@@ -36,6 +34,7 @@ namespace API.Controllers
             return await CreatePagedResult(unit.Repository<Product>(), spec, productParams.PageIndex, productParams.PageSize );
         }
 
+        [Cache(600)]
         [HttpGet("{id:int}")]   //   api/products/2
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
@@ -47,6 +46,7 @@ namespace API.Controllers
 
         }
 
+        [InvalidateCache("api/products|")]
         [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<Product>> CreateProduct(Product product)     //No need to add [FormBody] as [ApiController] Manages that
@@ -60,6 +60,7 @@ namespace API.Controllers
             return BadRequest("Problem creating product");
         }
 
+        [InvalidateCache("api/products|")]
         [Authorize(Roles = "Admin")]
         [HttpPut("{id:int}")]
         public async Task<ActionResult<Product>> UpdateProduct(int id, Product product)
@@ -77,6 +78,7 @@ namespace API.Controllers
             return BadRequest("Problem updating the product");
         }
 
+        [InvalidateCache("api/products|")]
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id:int}")]
         public async Task<ActionResult<Product>> DeleteProduct(int id)
@@ -93,7 +95,7 @@ namespace API.Controllers
             return BadRequest("Problem deleting the product");
         }
 
-
+        [Cache(10000)]
         [HttpGet("brands")]
         public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
         {
@@ -103,6 +105,7 @@ namespace API.Controllers
 
         }
 
+        [Cache(10000)]
         [HttpGet("types")]
         public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
         {

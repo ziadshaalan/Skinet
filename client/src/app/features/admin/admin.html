@@ -1,9 +1,11 @@
 <div>
     <mat-tab-group>
         <mat-tab label="Orders">
-            <div class="flex justify-between items-center mt-2 max-w-7xl mx-auto">
+            <!-- heading and status filter stack on phones instead of sharing one line -->
+            <div class="flex flex-col items-start gap-2 mt-2 max-w-7xl mx-auto sm:flex-row sm:items-center sm:justify-between">
                 <h2 class="text-2xl font-semibold">Customers orders</h2>
-                <mat-form-field appearance="outline" class="mt-2">
+                <div class="w-full sm:w-auto">
+                <mat-form-field appearance="outline" class="mt-2 w-full sm:w-auto">
                     <mat-label>Filter by status</mat-label>
                     <mat-select (selectionChange)="onFilterSelect($event)">
                         @for (status of statusOptions; track $index) {
@@ -11,10 +13,17 @@
                         }
                     </mat-select>
                 </mat-form-field>
+                </div>
             </div>
 
             <div class="p-4">
                 <div class="mat-shadow-2">
+                    <!--
+                      The orders table has 6 columns and does not fit a phone screen, so it
+                      scrolls sideways inside its own box instead of dragging the whole page
+                      sideways. The paginator sits outside this wrapper so it stays put.
+                    -->
+                    <div class="overflow-x-auto">
                     <table mat-table [dataSource]="dataSource">
 
                         <ng-container matColumnDef="id">
@@ -62,6 +71,7 @@
                         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
                         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                     </table>
+                    </div>
 
                    <mat-paginator 
                         class="bg-white"

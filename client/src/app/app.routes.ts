@@ -19,20 +19,32 @@ import { Admin } from './features/admin/admin';
 import { adminGuard } from './core/guards/admin-guard';
 
 export const routes: Routes = [
-    {path: '', component: Home},
-    {path: 'shop', component: Shop},
-    {path: 'shop/:id', component: ProductDetails},
-    {path: 'checkout', component: Checkout, canActivate: [authGuard, emptyGuard]},  // Checkout requires the user to be authenticated.
-    {path: 'checkout/success', component: CheckoutSuccess, canActivate: [authGuard, orderCompleteGuard]},
-    {path: 'orders', component: OrderComponent, canActivate: [authGuard]},
-    {path: 'orders/:id', component: OrderDetailed, canActivate: [authGuard]},
-    {path: 'account/login', component: Login},
-    {path: 'account/register', component: Register},
-    {path: 'cart', component: Cart},
-    {path: 'test-error', component: TestError},
-    {path: 'not-found', component: NotFound},
-    {path: 'server-error', component: ServerError},
-    {path: 'admin', component: Admin, canActivate: [authGuard],  children: [ {path: '', component: Admin, canActivate: [adminGuard]}]},
-    {path: '**', redirectTo: 'not-found', pathMatch: 'full'},
+    { path: '', component: Home },
+    { path: 'shop', component: Shop },
+    { path: 'shop/:id', component: ProductDetails },
+    { path: 'cart', component: Cart },
+    { path: 'checkout', loadChildren: () => import('./features/checkout/routes').then(r => r.checkoutRoutes) },
+    { path: 'orders', loadChildren: () => import('./features/orders/routes').then(r => r.orderRoutes) },
+    { path: 'account', loadChildren: () => import('./features/account/routes').then(r => r.accountRoutes) },
+    { path: 'test-error', component: TestError },
+    { path: 'not-found', component: NotFound },
+    { path: 'server-error', component: ServerError },
+    // Lazy-loads the Admin component to keep its code out of the initial bundle.
+    // Route guards separately control whether the user is allowed to access the route.
+    {
+        path: 'admin',
+        canActivate: [authGuard],
+        children: [
+            {
+                path: '',
+                loadComponent: () =>
+                    import('./features/admin/admin').then(m => m.Admin),
+                canActivate: [adminGuard]
+            }
+        ]
+    },
+    { path: '**', redirectTo: 'not-found', pathMatch: 'full' },
+
+
 
 ];

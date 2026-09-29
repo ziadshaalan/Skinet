@@ -1,9 +1,12 @@
 /* You can add global styles to this file, and also import other style files */
 
 @import "tailwindcss";
-/* overriding the default container class with custom padding and centering */
+/* Overriding the default container class with custom padding, centering and a max width.
+   NOTE: the old `max-w-screen-2xl` utility was removed in Tailwind v4, so it silently
+   generated no CSS. `max-w-[1536px]` is the v4 equivalent (--breakpoint-2xl).
+   w-full + max-w also stops wide pages from stretching edge-to-edge on ultrawide screens. */
 .container{
-    @apply mx-auto px-6;
+    @apply mx-auto w-full max-w-[1536px] px-4 sm:px-6;
 }
 
 @layer base {
@@ -11,4 +14,21 @@ button:not(:disabled),
 [role="button"]:not(:disabled) {
 cursor: pointer;
 }
+}
+
+/*
+  Material's paginator is ~330px wide once you include the page-size select and the
+  "1 - 5 of 32" range label, which overflows a phone screen (375px) once you add the
+  search box and the Filters/Sort buttons next to it.
+
+  These are Material's OWN internal classes, so the rule must live in this global
+  stylesheet — Angular's view encapsulation stops a component's CSS (shop.css etc.)
+  from reaching into Material's internal DOM.
+  Class names verified against @angular/material 21.x.
+*/
+@media (max-width: 640px) {
+  .mat-mdc-paginator-page-size,
+  .mat-mdc-paginator-range-label {
+    display: none;
+  }
 }

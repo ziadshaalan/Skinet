@@ -1,13 +1,16 @@
 <section>
     @if (cartService.cart()) {
-        <div class="flex w-full items-start gap-6 mt-32">
-            <div class="w-3/4">
+        <!-- mt-32 removed: app.html already offsets for the fixed header, so the two
+             were stacking. Stacked on phones so the order summary is not squeezed
+             into 25% of a 375px screen (~94px). -->
+        <div class="flex w-full flex-col items-start gap-6 lg:flex-row">
+            <div class="w-full lg:w-3/4">
                 @for (item of cartService.cart()?.items; track item.productId) {
                     <app-cart-item [item]="item"></app-cart-item>
                 }
             </div>
 
-            <div class="w-1/4">
+            <div class="w-full lg:w-1/4">
                 <app-order-summary></app-order-summary>
             </div>
         </div>
