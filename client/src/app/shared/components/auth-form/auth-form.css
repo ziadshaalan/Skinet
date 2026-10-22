@@ -1,0 +1,21 @@
+/* #region Why these overrides live here
+  Small overrides for the email-first auth form.
+
+  WHY THESE LIVE HERE AND NOT IN TAILWIND UTILITIES:
+  Angular Material's own rules (".mat-icon { font-size: 24px }") live in the
+  global stylesheet, while a component stylesheet is compiled with Angular's
+  view encapsulation - every selector gets an extra attribute
+  (".rule-icon[_ngcontent-abc]"). That extra attribute raises the specificity
+  from (0,1,0) to (0,2,0), so these rules win over Material's defaults
+  without needing !important.
+
+  NOTE: the small checklist icon (".rule-icon") lives in src/styles.css
+  instead of here, because the "reset your password" page uses it too and a
+  component stylesheet cannot reach into another component's template.
+*/
+/* #endregion */
+
+/* The checkbox label should be as small as the rest of the form. */
+.marketing-checkbox {
+  font-size: 0.875rem;
+}

@@ -4,7 +4,8 @@
     <input
         matInput
         [formControl]="control"
-        [type]="type === 'password' && hidePassword ? 'password' : 'text'"
+        [type]="type === 'password' ? (hidePassword ? 'password' : 'text') : type"
+        [attr.autocomplete]="autocomplete || null"
         placeholder="{{label}}"
     />
 

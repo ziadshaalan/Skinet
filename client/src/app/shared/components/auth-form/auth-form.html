@@ -1,0 +1,237 @@
+<!--
+  ===========================================================================
+  The email-first sign-in form
+  ===========================================================================
+  One form replaces the old separate "login" and "register" pages.
+
+  The user types an email, the API tells us what to do next, and we show the
+  matching screen:
+
+    1. EMAIL   - "who are you?"                      (always shown first)
+    2. PASSWORD- "what is your password?"            (account exists, has a password)
+    3. DETAILS - "let us create your account"        (account does not exist yet)
+
+  There is a fourth variant: the account exists but has NO password, because it
+  was created with a social provider (Google). Then step 2 does not
+  show a password field - it says which provider to press instead.
+
+  The social buttons sit below the form and are always visible, because they
+  work no matter which step we are on.
+-->
+
+<!--
+  Progress indicator. Shows where we are in the three steps.
+  The filled circles use the app's own Material theme colour, so the form
+  looks like the rest of the app instead of a different brand.
+-->
+<ol class="mb-6 flex items-center gap-2" aria-label="Sign in progress">
+  @for (label of stepLabels; track label; let i = $index) {
+    <li class="flex items-center gap-2">
+      <span
+        class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold transition-colors"
+        [style.background-color]="i <= stepIndex() ? 'var(--mat-sys-primary)' : ''"
+        [style.color]="i <= stepIndex() ? 'var(--mat-sys-on-primary)' : ''"
+        [class.border]="i > stepIndex()"
+        [class.border-gray-300]="i > stepIndex()"
+        [class.text-gray-400]="i > stepIndex()"
+      >{{ i + 1 }}</span>
+      <span class="hidden text-[11px] font-medium uppercase tracking-wide sm:inline"
+        [class.text-gray-900]="i === stepIndex()"
+        [class.text-gray-400]="i !== stepIndex()">{{ label }}</span>
+    </li>
+    @if (i < stepLabels.length - 1) {
+      <li class="h-px flex-1 bg-gray-200" aria-hidden="true"></li>
+    }
+  }
+</ol>
+
+@switch (step()) {
+
+  @case ('email') {
+    <!-- STEP 1 - email only. The API decides what comes after this. -->
+    <form [formGroup]="emailForm" (ngSubmit)="continue()" class="space-y-1">
+      <h1 class="text-2xl font-semibold">Sign in or create an account</h1>
+      <p class="mb-4 text-sm text-gray-500">
+        Enter your email and we will take it from there.
+      </p>
+
+      <app-text-input label="Email" type="email" formControlName="email" autocomplete="email" />
+
+      <button mat-flat-button type="submit" class="w-full"
+        [disabled]="emailForm.invalid || loading()">
+        {{ loading() ? 'One moment...' : 'Continue' }}
+      </button>
+    </form>
+  }
+
+  @case ('login') {
+    <!-- STEP 2 - the account exists. -->
+    <h1 class="text-2xl font-semibold">Welcome back</h1>
+
+    <!--
+      The address is shown as a small "chip" so it is clear which account the
+      rest of the screen is about, and so "Change" is easy to find.
+    -->
+    <div class="mt-2 mb-4 flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+      <span class="truncate text-sm text-gray-700">{{ email() }}</span>
+      <button type="button" class="shrink-0 text-sm text-gray-500 underline-offset-4 hover:underline"
+        (click)="changeEmail()">Change</button>
+    </div>
+
+    @if (hasPassword()) {
+      <form [formGroup]="loginForm" (ngSubmit)="signIn()">
+        <app-text-input label="Password" type="password" formControlName="password"
+          autocomplete="current-password" />
+
+        <!--
+          "Forgot password?" sends an email, so it only exists where the email
+          provider is actually configured (environment.emailEnabled is false in
+          production - there is no verified sending domain yet).
+        -->
+        @if (emailEnabled) {
+          <div class="-mt-1 mb-4 text-right">
+            <a routerLink="/account/forgot-password" [queryParams]="{ email: email() }">Forgot password?</a>
+          </div>
+        }
+
+        <button mat-flat-button type="submit" class="w-full"
+          [disabled]="loginForm.invalid || loading()">
+          {{ loading() ? 'Signing in...' : 'Sign in' }}
+        </button>
+      </form>
+    } @else {
+      <!--
+        The account was created with a social provider, so it has no password at
+        all. There is nothing to type here: the person is told which provider
+        they used and pointed at the matching button below.
+
+        WHY THERE IS NO "SET A PASSWORD BY EMAIL" LINK: that would need a real
+        email, and the sending domain does not exist yet. A link that leads
+        nowhere is worse than no link.
+      -->
+      <div class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+        <p class="font-medium">This account was created with {{ socialProviderName() }}.</p>
+        <p class="mt-1">
+          It has no password, so please press
+          <strong>Continue with {{ socialProviderName() }}</strong> below to sign in.
+        </p>
+      </div>
+    }
+  }
+
+  @case ('register') {
+    <!-- STEP 3 - create the account. -->
+    <form [formGroup]="registerForm" (ngSubmit)="createAccount()">
+      <h1 class="text-2xl font-semibold">Create your account</h1>
+
+      <div class="mt-2 mb-4 flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+        <span class="truncate text-sm text-gray-700">{{ email() }}</span>
+        <button type="button" class="shrink-0 text-sm text-gray-500 underline-offset-4 hover:underline"
+          (click)="changeEmail()">Change</button>
+      </div>
+
+      <div class="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
+        <app-text-input label="First name" formControlName="firstName" autocomplete="given-name" />
+        <app-text-input label="Last name" formControlName="lastName" autocomplete="family-name" />
+      </div>
+
+      <app-text-input label="Password" type="password" formControlName="password"
+        autocomplete="new-password" />
+
+      <!--
+        The rules are the same ones the server checks. Showing them while
+        typing means the user does not only find out after pressing the button.
+      -->
+      <ul class="mb-4 grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
+        @for (rule of passwordRules; track rule) {
+          <li class="flex items-center gap-1"
+            [class.text-green-700]="passwordRuleMet(rule)"
+            [class.text-gray-400]="!passwordRuleMet(rule)">
+            <mat-icon class="rule-icon">
+              {{ passwordRuleMet(rule) ? 'check_circle' : 'radio_button_unchecked' }}
+            </mat-icon>
+            <span>{{ passwordRuleLabels[rule] }}</span>
+          </li>
+        }
+      </ul>
+
+      <mat-checkbox formControlName="marketingOptIn" class="marketing-checkbox mb-2">
+        Send me news and offers by email
+      </mat-checkbox>
+
+      <!--
+        The captcha widget. The server refuses to create an account without a
+        valid token, so the button stays disabled until Turnstile has solved it.
+      -->
+      <app-turnstile class="block my-4" (token)="captchaToken.set($event)" />
+
+      <button mat-flat-button type="submit" class="w-full"
+        [disabled]="registerForm.invalid || !captchaToken() || loading()">
+        {{ loading() ? 'Creating your account...' : 'Create account' }}
+      </button>
+    </form>
+  }
+}
+
+<!--
+  Error messages. The list is always in the same place (below the form) so the
+  layout does not jump around when an error appears.
+-->
+@if (errors().length) {
+  <div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+    <ul class="list-disc space-y-1 ps-4">
+      @for (error of errors(); track $index) {
+        <li>{{ error }}</li>
+      }
+    </ul>
+  </div>
+}
+
+<!--
+  Social sign-in. The list of providers comes from the API, so a button only
+  appears when that provider is really configured on the server.
+-->
+@if (providers().length) {
+  <div class="mt-6" id="social-signin">
+    <div class="mb-4 flex items-center gap-3">
+      <span class="h-px flex-1 bg-gray-200"></span>
+      <span class="text-xs uppercase tracking-wide text-gray-400">or</span>
+      <span class="h-px flex-1 bg-gray-200"></span>
+    </div>
+
+    @for (provider of providers(); track provider) {
+      <!--
+        The logo sits on the LEFT and the text right next to it, the way the
+        provider buttons look everywhere else. Material centres the content of
+        its buttons, so ".social-button .mdc-button__label" (see styles.css)
+        switches this one to a left-aligned flex row.
+      -->
+      <button mat-stroked-button type="button" class="social-button mb-2 w-full"
+        (click)="continueWith(provider)">
+        @switch (provider) {
+          @case ('Google') {
+            <!-- The official Google "G" (the brand guidelines require the real logo). -->
+            <svg class="social-logo" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+              <path fill="#FFC107"
+                d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
+              <path fill="#FF3D00"
+                d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4c-7.682 0-14.344 4.337-17.694 10.691z" />
+              <path fill="#4CAF50"
+                d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
+              <path fill="#1976D2"
+                d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" />
+            </svg>
+          }
+          @default {
+            <!-- Fallback for a provider that has no logo of its own yet. -->
+            <span
+              class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-200 text-[10px] font-semibold text-gray-600">
+              {{ provider.charAt(0) }}
+            </span>
+          }
+        }
+        <span>Continue with {{ provider }}</span>
+      </button>
+    }
+  </div>
+}

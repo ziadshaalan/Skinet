@@ -7,8 +7,6 @@ import { NotFound } from './shared/not-found/not-found';
 import { ServerError } from './shared/server-error/server-error';
 import { Cart } from './features/cart/cart-component';
 import { Checkout } from './features/checkout/checkout';
-import { Login } from './features/account/login/login';
-import { Register } from './features/account/register/register';
 import { authGuard } from './core/guards/auth-guard';
 import { emptyGuard } from './core/guards/empty-guard';
 import { CheckoutSuccess } from './features/checkout/checkout-success/checkout-success';
@@ -25,6 +23,8 @@ export const routes: Routes = [
     { path: 'cart', component: Cart },
     { path: 'checkout', loadChildren: () => import('./features/checkout/routes').then(r => r.checkoutRoutes) },
     { path: 'orders', loadChildren: () => import('./features/orders/routes').then(r => r.orderRoutes) },
+    // The account pages (login, forgot password, reset password) are lazy
+    // loaded - they are not needed for the first paint of the shop.
     { path: 'account', loadChildren: () => import('./features/account/routes').then(r => r.accountRoutes) },
     { path: 'test-error', component: TestError },
     { path: 'not-found', component: NotFound },

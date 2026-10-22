@@ -4,9 +4,20 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      The id for "dotnet user-secrets". It is NOT a secret - it is only a name
+      under which the secrets are stored on this machine (outside the repo).
+
+      It is what makes this work:
+        dotnet user-secrets set "Email:ApiKey" "re_..."
+      so the Resend key never has to be written into appsettings.json and can
+      never be committed to git by accident.
+    -->
+    <UserSecretsId>skinet-api-6f2a9c41-7b0e-4d5a-9c33-1e8b7d4f2a10</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.25" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.25" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.25">
       <PrivateAssets>all</PrivateAssets>

@@ -27,7 +27,17 @@ export class InitService {
       cart: cart$,
       user: this.accountService.getUserInfo().pipe(
         tap(user => {
-          this.signalrService.createHubConnection()   //Create signalr connection once the app initializedd if the user logged in
+          // #region Only connect for signed in users
+          // Only open the SignalR connection when somebody is really signed in.
+          //
+          // WHY THE CHECK: getUserInfo() answers 204 (No Content) for an
+          // anonymous visitor, and the hub endpoint requires authentication
+          // ([Authorize] on NotificationHub). Connecting anyway would only
+          // produce a rejected connection and an error in the browser console.
+          // #endregion
+          if (user) {
+            this.signalrService.createHubConnection()
+          }
         })
       )
 

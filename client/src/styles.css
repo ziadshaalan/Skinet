@@ -32,3 +32,56 @@ cursor: pointer;
     display: none;
   }
 }
+
+/*
+  A small icon for the checklist under a password field (used by the sign-up
+  form and by the "reset your password" form).
+
+  WHY IT IS HERE AND NOT IN A COMPONENT STYLESHEET: the checklist is drawn by
+  two different components, so the rule has to be visible to both - a component
+  stylesheet is limited to its own template (Angular's view encapsulation).
+
+  WHY THE SELECTOR HAS TWO CLASSES: Angular Material draws its icons with
+  ViewEncapsulation.None, so ".mat-icon { height: 24px; width: 24px; }" is a
+  plain global rule with the specificity (0,1,0). Writing ".mat-icon.rule-icon"
+  raises the specificity to (0,2,0), so this rule wins without !important.
+*/
+.mat-icon.rule-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+}
+
+/*
+  The social sign-in buttons ("Continue with Google").
+  ----------------------------------------------------------------------------
+  Material centres the content of every button, but these buttons have to look
+  like the provider buttons everywhere else: the LOGO ON THE LEFT and the text
+  right next to it.
+
+  WHY THIS IS IN THE GLOBAL STYLESHEET AND NOT IN auth-form.css: ".mdc-button__label"
+  is Material's own internal element (Material uses ViewEncapsulation.None), and
+  a component stylesheet can never reach into it. The rule needs two classes
+  (".social-button .mdc-button__label") to have the same specificity as
+  Material's own rules while still describing only OUR buttons.
+
+  WHY THE LABEL IS A FLEX ROW: the logo and the text are two direct children of
+  the label, so the label itself lays them out - no wrapper element is needed.
+*/
+.social-button .mdc-button__label {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+/* The provider logo: a fixed square that never grows and never shrinks. */
+.social-logo {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+}
+

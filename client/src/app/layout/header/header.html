@@ -22,9 +22,7 @@
     <!-- Full navigation from lg up -->
     <nav class="hidden gap-3 uppercase text-xl lg:flex lg:my-2">
       <!--[routerLinkActiveOptions]="{exact: true}" Asks "Is the current URL exactly /?"-->
-      <a routerLink="/"
-         routerLinkActive="active"
-         [routerLinkActiveOptions]="{exact: true}">Home</a>
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
 
       <a routerLink="/shop" routerLinkActive="active">Shop</a>
       <a routerLink="/test-error" routerLinkActive="active">Errors</a>
@@ -40,33 +38,29 @@
         hangs above the icon, so it needs vertical room and would clip on a tight row.
       -->
 
-      <a routerLink="/cart"
-         routerLinkActive="active"
-         matBadge="{{cartService.itemCount()}}"
-         class="custom-badge lg:mt-2"
-         aria-label="My cart">
+      <a routerLink="/cart" routerLinkActive="active" matBadge="{{cartService.itemCount()}}"
+        class="custom-badge lg:mt-2" aria-label="My cart">
         <mat-icon>shopping_cart</mat-icon>
       </a>
 
       @if (accountService.currentUser()) {
-        <!-- desktop: email dropdown -->
-        <div class="hidden lg:block">
-          <button mat-button [matMenuTriggerFor]="accountMenu">
-            <mat-icon>arrow_drop_down</mat-icon>
-            <span>{{accountService.currentUser()?.email}}</span>
-          </button>
-        </div>
-        <!-- mobile: icon only, opens the same menu -->
-        <div class="lg:hidden">
-          <button mat-icon-button [matMenuTriggerFor]="accountMenu" aria-label="Account">
-            <mat-icon>account_circle</mat-icon>
-          </button>
-        </div>
+      <!-- desktop: email dropdown -->
+      <div class="hidden lg:block">
+        <button mat-button [matMenuTriggerFor]="accountMenu">
+          <mat-icon>arrow_drop_down</mat-icon>
+          <span>{{accountService.currentUser()?.email}}</span>
+        </button>
+      </div>
+      <!-- mobile: icon only, opens the same menu -->
+      <div class="lg:hidden">
+        <button mat-icon-button [matMenuTriggerFor]="accountMenu" aria-label="Account">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+      </div>
       } @else {
-        <div class="hidden gap-3 lg:flex">
-          <button routerLink="account/login" mat-stroked-button>Login</button>
-          <button routerLink="account/register" mat-stroked-button>Register</button>
-        </div>
+      <div class="hidden lg:flex">
+        <button routerLink="account/login" mat-stroked-button>Sign in</button>
+      </div>
       }
 
       <!-- hamburger: phones and tablets -->
@@ -83,9 +77,7 @@
     <mat-progress-bar> host (Material forces position: relative on it).
   -->
   <div class="absolute bottom-0 left-0 w-full">
-    <mat-progress-bar
-      mode="indeterminate"
-      [class.invisible]="!busyService.loading">
+    <mat-progress-bar mode="indeterminate" [class.invisible]="!busyService.loading">
     </mat-progress-bar>
   </div>
 </header>
@@ -109,10 +101,7 @@
 
 <!-- Navigation for phones and tablets -->
 <mat-menu #mobileMenu="matMenu">
-  <a mat-menu-item
-     routerLink="/"
-     routerLinkActive="active"
-     [routerLinkActiveOptions]="{exact: true}">
+  <a mat-menu-item routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
     <mat-icon>home</mat-icon>
     Home
   </a>
@@ -130,26 +119,22 @@
   <mat-divider></mat-divider>
 
   @if (accountService.currentUser()) {
-    <button mat-menu-item routerLink="/cart">
-      <mat-icon>shopping_cart</mat-icon>
-      My cart
-    </button>
-    <button mat-menu-item routerLink="/orders">
-      <mat-icon>history</mat-icon>
-      View Orders
-    </button>
-    <button mat-menu-item (click)="logout()">
-      <mat-icon>logout</mat-icon>
-      Logout
-    </button>
+  <button mat-menu-item routerLink="/cart">
+    <mat-icon>shopping_cart</mat-icon>
+    My cart
+  </button>
+  <button mat-menu-item routerLink="/orders">
+    <mat-icon>history</mat-icon>
+    View Orders
+  </button>
+  <button mat-menu-item (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    Logout
+  </button>
   } @else {
-    <button mat-menu-item routerLink="account/login">
-      <mat-icon>login</mat-icon>
-      Login
-    </button>
-    <button mat-menu-item routerLink="account/register">
-      <mat-icon>person_add</mat-icon>
-      Register
-    </button>
+  <button mat-menu-item routerLink="account/login">
+    <mat-icon>login</mat-icon>
+    Sign in
+  </button>
   }
 </mat-menu>
