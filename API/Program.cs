@@ -145,6 +145,26 @@ namespace API
                         Window = TimeSpan.FromMinutes(5),
                         QueueLimit = 0
                     }));
+
+                // Creates Stripe objects without a login, so the budget is small
+                options.AddPolicy("payment-intent", context => RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 20,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0
+                    }));
+
+                // Guest order creation plus the success-page polling (one request every ~2 seconds)
+                options.AddPolicy("guest-order", context => RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 60,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0
+                    }));
             });
 
 

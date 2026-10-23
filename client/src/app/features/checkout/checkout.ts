@@ -20,6 +20,7 @@ import { CurrencyPipe, JsonPipe } from '@angular/common';
 import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import { OrderToCreate, ShippingAddress } from '../../shared/models/order';
 import { OrderService } from '../../core/services/order-service';
+import { GuestSession } from '../../core/services/guest-session';  // GUEST: holds the guest email for this tab
 
 @Component({
   selector: 'app-checkout',
@@ -43,6 +44,8 @@ export class Checkout implements OnInit, OnDestroy {
   private stripeService = inject(StripeService)
   private accountService = inject(AccountService)
   private orderService = inject(OrderService)
+  private guestSession = inject(GuestSession)  // GUEST: source of the guest email
+  isGuest = this.guestSession.isGuest  // GUEST: template uses it to hide options that need an account
   cartService = inject(CartService)
   addressElement?: StripeAddressElement
   paymentElement?: StripePaymentElement
@@ -144,6 +147,8 @@ async confirmPayment(stepper: MatStepper) {
         const orderResult = await firstValueFrom(this.orderService.CreateOrder(order))
         if (orderResult) {
         this.orderService.orderComplete = true
+        // GUEST: no SignalR push for guests, so keep the payment intent id for the success page to poll with (the cart is deleted next)
+        if (this.guestSession.isGuest()) this.orderService.guestPaymentIntentId = orderResult.paymentIntentId
         this.cartService.deleteCart()
         this.cartService.selectedDelivery.set(null) 
         this.router.navigateByUrl('/checkout/success')
@@ -183,6 +188,7 @@ private async CreateOrderModel(): Promise<OrderToCreate> {
     deliveryMethodId: cart.deliveryMethodId,
     shippingAddress: shippingAddress,
     discount: this.cartService.totals()?.discount,
+    guestEmail: this.guestSession.activeEmail() ?? undefined,  // GUEST: email for guests only; signed-in users send nothing, the API reads the cookie
     paymentSummary: {
       last4: +card.last4,   //'+' converts string to int
       brand: card.brand,
@@ -196,7 +202,7 @@ private async CreateOrderModel(): Promise<OrderToCreate> {
 
 async onStepChange(event: StepperSelectionEvent) {
   if (event.selectedIndex === 1) {
-    if (this.saveAddress) {
+    if (this.saveAddress && !this.isGuest()) {  // GUEST: saving an address needs an account
       const address = await this.getAddressFromStripeAddress()  as Address
       address && firstValueFrom(this.accountService.updateAddress(address))
     }

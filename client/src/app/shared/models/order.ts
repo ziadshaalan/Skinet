@@ -45,4 +45,5 @@ export interface OrderToCreate {
     shippingAddress: ShippingAddress
     paymentSummary: PaymentSummary
     discount?: number
+    guestEmail?: string     // Only set for guests; matches CreateOrderDto.GuestEmail on the API
 }

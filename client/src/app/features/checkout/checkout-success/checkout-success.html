@@ -1,4 +1,5 @@
-@if (this.signalrService.orderSignal(); as order) {
+<!-- GUEST: reads currentOrder() (SignalR push for signed-in users, polled order for guests) instead of only the SignalR signal -->
+@if (currentOrder(); as order) {
 <section class="bg-white py-16">
     <div class="mx-auto max-w-2xl px-4">
         <h2 class="font-semibold text-2xl mb-2">Thanks for your fake order!</h2>
@@ -7,6 +8,12 @@
             as this
             is a fake shop. We will not notify you by email once your order has
             been shipped.</p>
+
+        <!-- GUEST: guests have no order history, so say it plainly -->
+        @if (isGuest) {
+        <p class="text-gray-500 mb-8">This was a guest order, so it is not saved to any account.</p>
+        }
+
         <div class="space-y-2 rounded-lg border border-gray-100 bg-gray-50 p-4 sm:p-6 mb-8">
             <dl class="flex items-center justify-between">
                 <dt class="font-normal text-gray-500">Date</dt>
@@ -29,8 +36,11 @@
         <!-- flex-wrap: "View your order" + "Continue shopping" needs ~330px, which only
              just fits a 375px screen. Let them stack instead of overflowing. -->
         <div class="flex flex-wrap items-center gap-2 sm:space-x-4">
+            <!-- GUEST: guests have no order page to open, so the button is hidden -->
+            @if (!isGuest) {
             <button routerLink="/orders/{{order.id}}" mat-flat-button>View your
                 order</button>
+            }
             <button routerLink="/shop" mat-stroked-button>Continue
                 shopping</button>
         </div>
@@ -43,9 +53,15 @@
 
         <div class="space-y-2 rounded-lg border border-gray-100 bg-gray-50 mb-2">
             <div class="flex flex-col justify-center items-center">
+                <!-- GUEST: after ~30s of polling without an answer, stop the spinner and tell the guest the payment went through -->
+                @if (timedOut()) {
+                <p class="text-xl">Still confirming your order</p>
+                <span>Your payment went through. Confirmation is taking longer than usual, please do not pay again.</span>
+                } @else {
                 <mat-spinner diameter="30"></mat-spinner>
                 <p class="text-xl">Loading order...</p>
                 <span>Your payment has been received, we are creating the order</span>
+                }
             </div>
         </div>
 

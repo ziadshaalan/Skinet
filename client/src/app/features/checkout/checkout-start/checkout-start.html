@@ -1,0 +1,39 @@
+<!-- Two options side by side on large screens, stacked on phones (sign-in first in both) -->
+<div class="mx-auto grid max-w-4xl gap-6 lg:grid-cols-2">
+
+  <!-- Left: the existing email-first sign-in / register form -->
+  <mat-card class="p-4 sm:p-8 bg-white">
+    <app-auth-form returnUrl="/checkout" (authenticated)="onAuthenticated()" />
+  </mat-card>
+
+  <!-- Right: guest checkout, email only -->
+  <mat-card class="p-4 sm:p-8 bg-white">
+    <form [formGroup]="guestForm" (ngSubmit)="continueAsGuest()" class="space-y-1">
+      <h1 class="text-2xl font-semibold">Continue as guest</h1>
+
+      <!-- Text matches our real logic: no password here, no history for guests -->
+      <p class="mb-2 text-sm text-gray-500">
+        Check out with just your email, no account needed.
+      </p>
+      <p class="mb-4 text-sm text-gray-500">
+        Guest orders are not linked to an account, so you will not have an order history or a saved address.
+        To check out faster next time, view your past orders and save your address, sign in or create an account
+        with the form on the left.
+      </p>
+
+      <app-text-input label="Email" type="email" formControlName="email" autocomplete="email" />
+
+      <!-- Shown only when check-email says this email already has an account -->
+      @if (accountExists()) {
+        <p class="mb-3 rounded bg-gray-50 p-3 text-sm text-gray-700">
+          An account already uses this email. Signing in is faster, but you can still continue as a guest.
+          This order will not appear in that account.
+        </p>
+      }
+
+      <button mat-flat-button type="submit" class="w-full" [disabled]="guestForm.invalid || loading()">
+        {{ accountExists() ? 'Continue as guest anyway' : 'Continue as guest' }}
+      </button>
+    </form>
+  </mat-card>
+</div>

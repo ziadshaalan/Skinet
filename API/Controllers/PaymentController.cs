@@ -1,4 +1,5 @@
-﻿using API.Extensions;
+﻿using API.DTOs;
+using API.Extensions;
 using API.SignalR;
 using Core.Entities;
 using Core.Entities.OrderAggregate;
@@ -8,6 +9,7 @@ using Infrastructure.Data;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.PowerBI.Api.Models;
 using Stripe;
@@ -28,11 +30,14 @@ namespace API.Controllers
         private const int MaxOrderLookupRetries = 5;
         private const int OrderLookupRetryDelayMs = 300;
 
-        [Authorize]
-        [HttpPost("{cartId}")]
-        public async Task<ActionResult<ShoppingCart>> CreateOrUpdatePaymentIntent(string cartId)
+        [EnableRateLimiting("payment-intent")]
+        [HttpPost("{cartId}")] 
+        public async Task<ActionResult<ShoppingCart>> CreateOrUpdatePaymentIntent(string cartId, PaymentIntentRequesetDto request)
         {
-            var cart = await paymentService.CreateOrUpdatePaymentIntent(cartId, User.GetEmail());
+            var buyer = User.ResolveBuyer(request.GuestEmail);
+            if (buyer == null) return BadRequest("A valid email is required to check out as a guest");
+
+            var cart = await paymentService.CreateOrUpdatePaymentIntent(cartId, buyer.Email, buyer.IsGuest);
             if (cart == null) return BadRequest("Problem with the cart");
 
             return Ok(cart);
@@ -118,12 +123,21 @@ namespace API.Controllers
 
                 await unit.Complete();
 
-                var connectionId = NotificationHub.GetConnectionIdByEmail(order.BuyerEmail);  //"Does this user currently have a SignalR connection?, This can happen when the user closed the browser, lost connection, etc.
+                await unit.Complete();
 
-                if (!string.IsNullOrEmpty(connectionId))
+                // Guest orders get no push: a guest can type any email, so the lookup could hit another user's connection
+                if (!order.IsGuestOrder)
                 {
-                    await hubContext.Clients.Client(connectionId)   //talking to SignalR's connection management
-                        .SendAsync("OrderCompleteNotification", order.ToDto());
+                    // Ask the hub: does this buyer's email have an open SignalR connection right now?
+                    var connectionId = NotificationHub.GetConnectionIdByEmail(order.BuyerEmail);
+
+                    // Empty means the buyer closed the browser or lost connection, so there is nobody to notify
+                    if (!string.IsNullOrEmpty(connectionId))
+                    {
+                        // Send the "OrderCompleteNotification" message, with the order data, to that one connection only
+                        await hubContext.Clients.Client(connectionId)
+                            .SendAsync("OrderCompleteNotification", order.ToDto());
+                    }
                 }
 
             }

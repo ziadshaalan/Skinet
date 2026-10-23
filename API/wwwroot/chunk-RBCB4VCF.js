@@ -1,1 +1,0 @@
-import{a as n,c as a}from"./chunk-BGWR366W.js";import{T as r,ac as o,r as e}from"./chunk-DPU3G6UH.js";var A=async(s,c)=>{let t=r(a),u=r(o),i=r(n);return t.currentUser()||await e(t.getUserInfo())?!0:(i.error("You are not authenticated, Please log in."),u.createUrlTree(["/account/login"],{queryParams:{returnUrl:c.url}}))};export{A as a};

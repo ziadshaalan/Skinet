@@ -9,14 +9,16 @@ namespace Core.Specification
 {
     public class OrderSpecification : BaseSpecification<Order>
     {
-        public OrderSpecification(string email) : base(x => x.BuyerEmail == email)
+
+        public OrderSpecification(string email) : base(x => x.BuyerEmail == email && !x.IsGuestOrder)   // "My orders" list: never includes guest orders, even when the email matches
+
         {
             AddIncludes(x => x.OrderItems);
             AddIncludes(x => x.DeliveryMethod);
             AddOrderByDescending(x => x.OrderDate);
         }
 
-        public OrderSpecification(string email, int id) : base(x => x.BuyerEmail == email && x.Id == id)
+        public OrderSpecification(string email, int id) : base(x => x.BuyerEmail == email && x.Id == id && !x.IsGuestOrder)
         {
             // Just a 2nd format aside the lambda expression
             AddIncludes("OrderItems");

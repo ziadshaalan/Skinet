@@ -19,6 +19,8 @@ namespace Core.Entities.OrderAggregate
         public decimal Subtotal { get; set; }
         public decimal Discount { get; set; } // Added due to coupon
         public required string PaymentIntentId { get; set; }
+        public bool IsGuestOrder { get; set; }     // True when the order was placed without an account; keeps it out of every "My orders" list
+
 
 
 

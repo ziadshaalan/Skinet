@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { Cart } from '../../shared/models/cart';
 import { firstValueFrom, map } from 'rxjs';
 import { AccountService } from './account-service';
+import { GuestSession } from './guest-session';
 
 
 @Injectable({
@@ -20,6 +21,7 @@ export class StripeService {
   private elements?: StripeElements
   private addressElement?: StripeAddressElement
   private paymentElement?: StripePaymentElement
+  private guestSession = inject(GuestSession)
 
 
 
@@ -127,13 +129,15 @@ async confirmPayment(confirmationToken: ConfirmationToken) {
 }
 
   createOrUpdatePaymentIntent() {
-    const cart = this.cartService.cart()
-    if (!cart) throw new Error('Problem with cart')
-    return this.http.post<Cart>(this.baseUrl + 'payments/' + cart.id, {}).pipe(
-      map(cart => {
-        this.cartService.cart.set(cart)
-        return cart
-      })  
+  const cart = this.cartService.cart()
+  if (!cart) throw new Error('Problem with cart')
+
+  // Guests send their email in the body; signed-in users send nothing, the API reads the cookie
+  return this.http.post<Cart>(this.baseUrl + 'payments/' + cart.id, { guestEmail: this.guestSession.activeEmail() ?? undefined }).pipe(
+    map(cart => {
+      this.cartService.cart.set(cart)
+      return cart
+    })
   )
 }
 

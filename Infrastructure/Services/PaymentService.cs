@@ -8,7 +8,7 @@ using System.Reflection.Metadata.Ecma335;
 
 namespace Infrastructure.Services
 {
-    public class PaymentService : IPaymentService   
+    public class PaymentService : IPaymentService
     {
         private readonly ICartService cartService;
         private readonly IUnitOfWork unit;
@@ -23,15 +23,18 @@ namespace Infrastructure.Services
             StripeConfiguration.ApiKey = config["StripeSettings:SecretKey"];
         }
 
-        public async Task<ShoppingCart?> CreateOrUpdatePaymentIntent(string cartId, string email)
+        // isGuest = true means no AppUser exists, so the Stripe customer lookup is skipped
+        public async Task<ShoppingCart?> CreateOrUpdatePaymentIntent(string cartId, string email, bool isGuest)
         {
 
             var cart = await cartService.GetCartAsync(cartId)
                 ?? throw new Exception("Cart unavaliable");
-           
 
-            var stripeCustomerId = await GetOrCreateStripeCustomerId(email); // resolves the Stripe Customer for this user before creating the intent
-                                                                             
+
+            // signed-in user: resolve (or create) their Stripe Customer; guest: no customer at all
+            //Why: GetOrCreateStripeCustomerId calls userManager.FindByEmailAsync(email) and throws “Problem finding user” when nothing is found. A guest has no account, so without this change every guest payment would fail. The type is string? because guests now get null.
+            string? stripeCustomerId = isGuest ? null : await GetOrCreateStripeCustomerId(email);       
+
             var shippingPrice = await GetShippingPriceAsync(cart) ?? 0m;
 
             await ValidateCartItemsInCartAsync(cart);
@@ -40,7 +43,7 @@ namespace Infrastructure.Services
 
             if (cart.Coupon != null)
             {
-                subtotal = await ApplyDiscountAsync(cart.Coupon, subtotal); 
+                subtotal = await ApplyDiscountAsync(cart.Coupon, subtotal);
             }
 
             var total = subtotal + shippingPrice;
@@ -48,8 +51,8 @@ namespace Infrastructure.Services
             var totalInCents = (long)Math.Round(total, MidpointRounding.AwayFromZero);
 
 
-            await CreateUpdatePaymentIntentAsync(cart, totalInCents, stripeCustomerId);
-            
+            await CreateUpdatePaymentIntentAsync(cart, totalInCents, stripeCustomerId, email);
+
             await cartService.SetCartAsync(cart);
 
             return cart;
@@ -68,7 +71,8 @@ namespace Infrastructure.Services
             return result.Status;
         }
 
-        private async Task CreateUpdatePaymentIntentAsync(ShoppingCart cart, long totalInCents, string stripeCustomerId)
+        // stripeCustomerId is null for guests; their email goes into metadata so the payment can be identified in the Stripe dashboard
+        private async Task CreateUpdatePaymentIntentAsync(ShoppingCart cart, long totalInCents, string? stripeCustomerId, string email)
         {
             var service = new PaymentIntentService();
 
@@ -79,9 +83,17 @@ namespace Infrastructure.Services
                     Amount = totalInCents,
                     Currency = "usd",
                     PaymentMethodTypes = ["card"],
-                    Customer = stripeCustomerId  // ties this payment to a real Stripe customer instead of leaving it as a guest
+                    Customer = stripeCustomerId  // signed-in: ties the payment to their Stripe customer; guest: null, so Stripe creates no customer
 
                 };
+
+
+                //Why the metadata: A guest payment has no customer in Stripe, so nothing in the dashboard would say who paid. The guest_email metadata fixes that. It is stored on Stripe only and never emailed. The email parameter exists only to feed this line.
+                if (stripeCustomerId == null)
+                {
+                    options.Metadata = new Dictionary<string, string> { ["guest_email"] = email };
+                }
+
                 var intent = await service.CreateAsync(options);
                 cart.PaymentIntentId = intent.Id;
                 cart.ClientSecret = intent.ClientSecret;
@@ -114,7 +126,7 @@ namespace Infrastructure.Services
             }
 
             return subtotal;
-            
+
         }
 
         private decimal CalculateSubTotal(ShoppingCart cart)
@@ -165,7 +177,8 @@ namespace Infrastructure.Services
 
 
             var customerService = new CustomerService();
-            var customer = await customerService.CreateAsync(new CustomerCreateOptions {
+            var customer = await customerService.CreateAsync(new CustomerCreateOptions
+            {
                 Name = $"{user.FirstName} {user.LastName}",
                 Email = email
             });
@@ -176,6 +189,7 @@ namespace Infrastructure.Services
             return customer.Id;
 
         }
-       
+
+
     }
 }

@@ -15,6 +15,8 @@ namespace API.DTOs
         public PaymentSummary PaymentSummary { get; set; } = null!;
         // Recommended: extract ShippingAddressDto/PaymentSummaryDto with field-level validation
         public decimal Discount { get; set; }
+        public string? GuestEmail { get; set; } // Only used when the caller is not signed in
+
 
     }
 }

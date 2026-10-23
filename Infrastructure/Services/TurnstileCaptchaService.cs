@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace Infrastructure.Services
 {
@@ -35,13 +36,24 @@ namespace Infrastructure.Services
             // An empty token can never be valid. Bail out before spending a request.
             if (string.IsNullOrWhiteSpace(token)) return false;
 
+            var secret = config["Turnstile:SecretKey"];
+            // A missing secret rejects every single visitor, and Cloudflare only says so
+            // in the response body. Say it here as well, because "the captcha never
+            // works" is otherwise indistinguishable from "people keep failing it".
+            if (string.IsNullOrWhiteSpace(secret))
+            {
+                logger.LogError("Turnstile:SecretKey is not configured, so every captcha is rejected. " +
+                                "Set the Turnstile__SecretKey application setting on the server.");
+                return false;
+            }
+
             try
             {
                 var response = await http.PostAsync(
                     VerifyEndpoint,
                     new FormUrlEncodedContent(new Dictionary<string, string>
                     {
-                        ["secret"] = config["Turnstile:SecretKey"] ?? string.Empty,
+                        ["secret"] = secret,
                         ["response"] = token
                     }));
 
@@ -51,6 +63,16 @@ namespace Infrastructure.Services
                 response.EnsureSuccessStatusCode();
 
                 var result = await response.Content.ReadFromJsonAsync<TurnstileResult>();
+
+                // error-codes names the reason: missing-input-secret (no secret sent),
+                // invalid-input-secret (secret does not belong to the sitekey),
+                // invalid-input-response (expired or already used token), ...
+                if (result?.Success != true)
+                {
+                    logger.LogWarning("Cloudflare Turnstile rejected the captcha: {ErrorCodes}",
+                        string.Join(", ", result?.ErrorCodes ?? Array.Empty<string>()));
+                }
+
                 return result?.Success == true;
             }
             catch (Exception ex)
@@ -63,9 +85,11 @@ namespace Infrastructure.Services
         }
 
         /// <summary>
-        /// Only the "success" flag is needed. The rest of Cloudflare's answer
-        /// (error codes, challenge timestamps, hostname, ...) is not required here.
+        /// Only the "success" flag is needed to take a decision. "error-codes" is read
+        /// as well so a misconfiguration can be named in the log instead of guessed.
         /// </summary>
-        private record TurnstileResult(bool Success);
+        private record TurnstileResult(
+            bool Success,
+            [property: JsonPropertyName("error-codes")] string[]? ErrorCodes);
     }
 }

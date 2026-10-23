@@ -11,6 +11,9 @@ export class OrderService {
   private http = inject(HttpClient)
   orderComplete = false
   
+  // Guests only: the success page needs this id to poll the order status (the cart is already deleted by then)
+guestPaymentIntentId: string | null = null
+
   CreateOrder(orderToCreate: OrderToCreate) {
     return this.http.post<Order>(this.baseUrl + 'orders', orderToCreate)
   }
@@ -21,6 +24,11 @@ export class OrderService {
 
   GetOrderDetailed(id: number) {
     return this.http.get<Order>(this.baseUrl + 'orders/' + id)
+  }
+
+  // Guest success page polls this until the webhook moves the order out of Pending
+  GetGuestOrder(paymentIntentId: string) {
+    return this.http.get<Order>(this.baseUrl + 'orders/by-payment-intent/' + paymentIntentId)
   }
 
 }
