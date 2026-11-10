@@ -21,6 +21,7 @@ import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import { OrderToCreate, ShippingAddress } from '../../shared/models/order';
 import { OrderService } from '../../core/services/order-service';
 import { GuestSession } from '../../core/services/guest-session';  // GUEST: holds the guest email for this tab
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-checkout',
@@ -139,38 +140,60 @@ try {
 async confirmPayment(stepper: MatStepper) {
   this.loading = true
   try {
-    if (this.confirmationToken) {
-      const result = await this.stripeService.confirmPayment(this.confirmationToken)  
+    if (!this.confirmationToken) {
+      throw new Error('No confirmation token available')
+    }
 
-      if (result.paymentIntent?.status === 'succeeded') { // result.paymentIntent is the Stripe PaymentIntent object returned by confirmPayment()
-        const order = await this.CreateOrderModel()
-        const orderResult = await firstValueFrom(this.orderService.CreateOrder(order))
-        if (orderResult) {
-        this.orderService.orderComplete = true
-        // GUEST: no SignalR push for guests, so keep the payment intent id for the success page to poll with (the cart is deleted next)
-        if (this.guestSession.isGuest()) this.orderService.guestPaymentIntentId = orderResult.paymentIntentId
-        this.cartService.deleteCart()
-        this.cartService.selectedDelivery.set(null) 
-        this.router.navigateByUrl('/checkout/success')
-        }
-        else {
-          throw new Error('order creation failed')
-        }
-      } else if (result.error) {
-        throw new Error(result.error.message)   // Case 2: payment failed with a known Stripe error
+    // 1) Create the order FIRST: the API checks and reduces the stock here
+    const order = await this.CreateOrderModel()
+    const orderResult = await firstValueFrom(this.orderService.CreateOrder(order))
+    if (!orderResult) {
+      throw new Error('Order creation failed')
+    }
 
-      } else {
-        throw new Error('Something went wrong') // Case 3: neither succeeded nor had a stripe error → unexpected state
-      }
+    // 2) Only now take the payment
+    const result = await this.stripeService.confirmPayment(this.confirmationToken)
+
+    if (result.paymentIntent?.status === 'succeeded') {
+      this.handleOrderSuccess(orderResult.paymentIntentId)
+    } else if (result.error) {
+      throw new Error(result.error.message)   // payment failed with a known Stripe error
+    } else {
+      throw new Error('Something went wrong') // unexpected state
     }
   } catch (error: any) {
-    this.snackbar.error(error.message || 'Something went wrong')
-    stepper.previous()
+    this.handleError(error, stepper)
   } finally {
     this.loading = false
   }
-
 }
+
+private handleOrderSuccess(paymentIntentId: string) {
+  this.orderService.orderComplete = true
+  // GUEST: no SignalR push for guests, so keep the payment intent id for the success page to poll
+  if (this.guestSession.isGuest()) this.orderService.guestPaymentIntentId = paymentIntentId
+  this.cartService.deleteCart()
+  this.cartService.selectedDelivery.set(null)
+  this.router.navigateByUrl('/checkout/success')
+}
+
+private handleError(error: any, stepper: MatStepper) {
+  if (error instanceof HttpErrorResponse) {
+    if (error.status === 429) this.snackbar.error('Too many attempts, please wait a minute')
+
+    if (error.status === 400) {
+      // The interceptor already showed the message (e.g. not enough stock): the cart must be fixed
+      this.router.navigateByUrl('/cart')
+      return
+    }
+  } else if (Array.isArray(error)) {
+    this.snackbar.error(error.join(', '))   // flattened validation errors from the interceptor
+  } else {
+    this.snackbar.error(error?.message || 'Something went wrong')
+  }
+  stepper.previous()   // back to the payment step
+}
+
 
 private async CreateOrderModel(): Promise<OrderToCreate> {
   const cart = this.cartService.cart()

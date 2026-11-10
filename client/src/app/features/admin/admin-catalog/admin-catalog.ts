@@ -11,6 +11,7 @@ import { AdminService } from '../../../core/services/admin-service';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '../../../core/services/dialog-service';
 import { Router } from '@angular/router';
+import { UpdateQuantity } from '../update-quantity/update-quantity';
 
 @Component({
   selector: 'app-admin-catalog',
@@ -66,7 +67,7 @@ export class AdminCatalog {
       tooltip: 'Update quantity in stock',
       color: '#2e7d32',
       action: (row: any) => {
-        console.log(row)
+        this.openQuantityDialog(row)
       }
     },
     {
@@ -155,6 +156,27 @@ export class AdminCatalog {
         this.products = this.products.filter(x => x.id !== id);
       }
     })
+  }
+
+  openQuantityDialog(product: Product) {
+    const dialog = this.dialog.open(UpdateQuantity, {
+      minWidth: '500px',
+      data: {
+        quantity: product.quantityInStock,
+        name: product.name
+      }
+    });
+    dialog.afterClosed().subscribe({
+      next: async result => {
+        if (result) {
+          await firstValueFrom(this.adminService.updateStock(product.id, result.updatedQuantity));
+          const index = this.products.findIndex(p => p.id === product.id);
+          if (index !== -1) {
+            this.products[index].quantityInStock = result.updatedQuantity;
+          }
+        }
+      }
+    });
   }
 
 

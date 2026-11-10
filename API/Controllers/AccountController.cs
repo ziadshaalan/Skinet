@@ -472,7 +472,7 @@ namespace API.Controllers
         private static readonly Dictionary<string, string> ExternalProviders =
             new(StringComparer.OrdinalIgnoreCase)
             {
-                ["google"] = "Google"
+                ["google"] = "Google" 
             };
 
         #region Only configured providers
@@ -490,7 +490,7 @@ namespace API.Controllers
             {
                 if (await schemes.GetSchemeAsync(scheme) != null) configured.Add(scheme);
             }
-            return Ok(configured);
+            return Ok(configured);  
         }
 
         #region Social sign-in round trip

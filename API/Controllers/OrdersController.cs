@@ -1,5 +1,6 @@
 ﻿using API.DTOs;
 using API.Extensions;
+using API.RequestHelpers;
 using Core.Entities;
 using Core.Entities.OrderAggregate;
 using Core.Interfaces;
@@ -17,6 +18,7 @@ namespace API.Controllers
     public class OrdersController(IUnitOfWork unit, ICartService cartService) : BaseApiController
     {
         // Signed-in user -> normal order; anonymous -> guest order flagged IsGuestOrder
+        [InvalidateCache("api/products|")]
         [EnableRateLimiting("guest-order")]
         [HttpPost]
         public async Task<ActionResult<Order>> CreateOrder(CreateOrderDto orderDto)
@@ -33,10 +35,26 @@ namespace API.Controllers
 
             var items = new List<OrderItem>();
 
-            foreach (var item in cart.Items)
+
+            var productIds = cart.Items.Select(i => i.ProductId).Distinct().ToList();
+            var products = (await unit.Repository<Product>().ListAsync(new ProductsByIdsSpecification(productIds)))
+            .ToDictionary(p => p.Id);   // ONE trip for all products
+
+            foreach (var item in cart.Items)       // 1) take the next CART ITEM
             {
-                var productItem = await unit.Repository<Product>().GetByIdAsync(item.ProductId);
+
+                if (!products.TryGetValue(item.ProductId, out var productItem)) return BadRequest("Problem with the order");    // 2) pluck its product from the dictionary
+
                 if (productItem == null) return BadRequest("Problem with the order");
+
+                // Not enough stock -> reject the whole order (nothing is saved yet)
+                if (productItem.QuantityInStock < item.Quantity)
+                {
+                    return BadRequest($"Not enough stock for product {productItem.Name}. Available stock: {productItem.QuantityInStock}");
+                }
+
+                // Take the ordered quantity out of stock
+                productItem.QuantityInStock -= item.Quantity;
 
                 var itemOrdered = new ProductItemOrdered
                 {
@@ -52,9 +70,7 @@ namespace API.Controllers
                     Quantity = item.Quantity,
                 };
                 items.Add(orderItem);
-
-            }
-
+            } 
             var deliveryMethod = await unit.Repository<DeliveryMethod>().GetByIdAsync(orderDto.DeliveryMethodId);
             if (deliveryMethod == null) return BadRequest("No delivery method selected");
 
@@ -72,7 +88,36 @@ namespace API.Controllers
                 Discount = orderDto.Discount,
             };
 
-            unit.Repository<Order>().Add(order);
+            // A retry after a failed payment: this payment intent already has an order
+            var spec = new OrderSpecification(cart.PaymentIntentId, true);
+            var existingOrder = await unit.Repository<Order>().GetEntityWithSpec(spec);
+
+            if (existingOrder != null)
+            {
+                // Only an unpaid order can be updated
+                if (existingOrder.Status != OrderStatus.Pending && existingOrder.Status != OrderStatus.PaymentFailed)
+                {
+                    return BadRequest("This order has already been paid");
+                }
+
+                existingOrder.OrderItems = order.OrderItems;
+                existingOrder.DeliveryMethod = order.DeliveryMethod;
+                existingOrder.ShippingAddress = order.ShippingAddress;
+                existingOrder.Subtotal = order.Subtotal;
+                existingOrder.Discount = order.Discount;
+                existingOrder.PaymentSummary = order.PaymentSummary;
+                existingOrder.BuyerEmail = order.BuyerEmail;
+                existingOrder.IsGuestOrder = order.IsGuestOrder;
+                existingOrder.Status = OrderStatus.Pending;   // new attempt, wait for the webhook again
+
+                unit.Repository<Order>().Update(existingOrder);
+                order = existingOrder;   // return the updated order
+            }
+            else
+            {
+                unit.Repository<Order>().Add(order);
+            }
+
             if (await unit.Complete())
             {
                 return Ok(order);

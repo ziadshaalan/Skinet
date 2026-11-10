@@ -46,6 +46,10 @@ namespace API.Controllers
 
             if (order.Status == OrderStatus.Pending)
                 return BadRequest("Payment not received for this order");
+            if (order.Status == OrderStatus.PaymentFailed)
+            {
+                return BadRequest("This order has already failed and cannot be refunded.");
+            }
 
             var result = await paymentService.RefundPayment(order.PaymentIntentId);
 

@@ -78,6 +78,8 @@ namespace API.Controllers
             return BadRequest("Problem updating the product");
         }
 
+       
+
         [InvalidateCache("api/products|")]
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id:int}")]
@@ -118,5 +120,24 @@ namespace API.Controllers
         {
             return unit.Repository<Product>().Exists(id);
         }
+
+        [InvalidateCache("api/products|")]
+        [Authorize(Roles = "Admin")]
+        [HttpPut("update-stock/{id:int}")]
+        public async Task<ActionResult> UpdateStock(int id, [FromBody] int newQuantity)
+        {
+            if (newQuantity < 0) return BadRequest("Quantity cannot be negative");
+
+            var product = await unit.Repository<Product>().GetByIdAsync(id);
+            if (product == null) return NotFound();
+
+            product.QuantityInStock = newQuantity;   // overwrite the old value
+            unit.Repository<Product>().Update(product);
+
+            if (await unit.Complete()) return NoContent();
+
+            return BadRequest("Problem updating the stock");
+        }
+
     }
 }

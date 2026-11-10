@@ -1,5 +1,7 @@
 ﻿using Core.Entities;
+using Core.Exceptions;
 using Core.Interfaces;
+using Core.Specification;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Stripe;
@@ -135,16 +137,20 @@ namespace Infrastructure.Services
             return itemTotal;
         }
 
+
         private async Task ValidateCartItemsInCartAsync(ShoppingCart cart)
         {
+            var ids = cart.Items.Select(i => i.ProductId).Distinct().ToList();
+            var products = (await unit.Repository<Core.Entities.Product>().ListAsync(new ProductsByIdsSpecification(ids)))
+                .ToDictionary(p => p.Id);
 
             foreach (var item in cart.Items)
             {
-                var product = await unit.Repository<Core.Entities.Product>().GetByIdAsync(item.ProductId)
-                    ?? throw new Exception("Problem getting product in cart");
+                if (!products.TryGetValue(item.ProductId, out var product))
+                    throw new Exception("Problem getting product in cart");
 
-                if (item.Quantity <= 0 || item.Quantity > product.QuantityInStock)
-                    throw new Exception("Invalid quantity in cart");  // reject negative/zero/over-stock quantity to block cart total manipulation
+                if (item.Quantity <= 0)
+                    throw new Exception("Invalid quantity in cart");
 
                 if (item.Price != product.Price)
                 {
@@ -152,6 +158,26 @@ namespace Infrastructure.Services
                 }
             }
         }
+        //private async Task ValidateCartItemsInCartAsync(ShoppingCart cart)
+        //{
+
+        //    foreach (var item in cart.Items)
+        //    {
+        //        var product = await unit.Repository<Core.Entities.Product>().GetByIdAsync(item.ProductId)
+        //            ?? throw new Exception("Problem getting product in cart");
+
+        //        if (item.Quantity <= 0)
+        //            throw new CartValidationException("Invalid quantity in cart");   // blocks cart total manipulation
+
+        //        if (item.Quantity > product.QuantityInStock)
+        //            throw new CartValidationException($"Not enough stock for product {product.Name}. Available stock: {product.QuantityInStock}");
+
+        //        if (item.Price != product.Price)
+        //        {
+        //            item.Price = product.Price;
+        //        }
+        //    }
+        //}
 
         private async Task<decimal?> GetShippingPriceAsync(ShoppingCart cart)
         {

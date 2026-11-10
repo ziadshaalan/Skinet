@@ -240,7 +240,7 @@ export class AuthForm {
         captchaToken: this.captchaToken()!
       }))
       await firstValueFrom(this.accountService.getUserInfo())
-      this.authenticated.emit()
+      this.authenticated.emit()   //@@@@@@@@@@@@@@@@@@@@@
     } catch (err) {
       this.errors.set(this.toMessages(err))
       this.turnstile()?.reset()   // a captcha token works only once

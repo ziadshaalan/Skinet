@@ -1,19 +1,16 @@
 ﻿using API.DTOs;
 using API.Extensions;
+using API.RequestHelpers;
 using API.SignalR;
 using Core.Entities;
 using Core.Entities.OrderAggregate;
+using Core.Exceptions;
 using Core.Interfaces;
 using Core.Specification;
-using Infrastructure.Data;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.PowerBI.Api.Models;
 using Stripe;
-using System.Security.Cryptography.Xml;
 
 namespace API.Controllers
 {
@@ -37,7 +34,16 @@ namespace API.Controllers
             var buyer = User.ResolveBuyer(request.GuestEmail);
             if (buyer == null) return BadRequest("A valid email is required to check out as a guest");
 
-            var cart = await paymentService.CreateOrUpdatePaymentIntent(cartId, buyer.Email, buyer.IsGuest);
+            ShoppingCart? cart;
+            try
+            {
+                cart = await paymentService.CreateOrUpdatePaymentIntent(cartId, buyer.Email, buyer.IsGuest);
+            }
+            catch (CartValidationException ex)
+            {
+                return BadRequest(ex.Message);   // e.g. "Not enough stock for product X. Available stock: 1"
+            }
+
             if (cart == null) return BadRequest("Problem with the cart");
 
             return Ok(cart);
@@ -49,10 +55,11 @@ namespace API.Controllers
             var deliveryMethods = await dmRepo.ListAllAsync();
             return Ok(deliveryMethods);
         }
+        [InvalidateCache("api/products|")]   // the webhook changes stock, so the cached product list must be cleared
         [HttpPost("webhook")]
         public async Task<IActionResult> StripeWebhook()
         {
-            var json = await new StreamReader(Request.Body).ReadToEndAsync();   // Read raw request body as text (needed for Stripe signature verification)
+            var json = await new StreamReader(Request.Body).ReadToEndAsync();
 
             try
             {
@@ -62,7 +69,16 @@ namespace API.Controllers
                     return BadRequest("Invalid event data");
                 }
 
-                await HandlePaymentIntentSucceeded(intent);
+                switch (stripeEvent.Type)
+                {
+                    case "payment_intent.succeeded":
+                        await HandlePaymentIntentSucceeded(intent);
+                        break;
+                    case "payment_intent.payment_failed":
+                        await HandlePaymentIntentFailed(intent);
+                        break;
+                        // any other event type: nothing to do
+                }
 
                 return Ok();
             }
@@ -76,7 +92,55 @@ namespace API.Controllers
                 logger.LogError(ex, "An unexpected error occured");
                 return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occured");
             }
+        }
 
+        private async Task HandlePaymentIntentFailed(PaymentIntent intent)
+        {
+            var spec = new OrderSpecification(intent.Id, true);
+            var order = await unit.Repository<Order>().GetEntityWithSpec(spec);
+
+            if (order == null)
+            {
+                logger.LogWarning(
+                    "Payment failed for intent {IntentId} but no order exists",
+                    intent.Id);
+
+                return;
+            }
+
+            // Prevent restoring stock more than once for an already-failed order.
+            if (order.Status == OrderStatus.PaymentFailed) return;
+
+            // Collect distinct product IDs from the order items.
+            var productIds = order.OrderItems
+                .Select(i => i.ItemOrdered.ProductId)
+                .Distinct()
+                .ToList();
+
+            // Fetch all products in ONE database query.
+            var products = (await unit.Repository<Core.Entities.Product>()
+                .ListAsync(new ProductsByIdsSpecification(productIds)))
+                .ToDictionary(p => p.Id);
+
+            // Restore stock using in-memory dictionary lookups.
+            foreach (var item in order.OrderItems)
+            {
+                if (!products.TryGetValue(item.ItemOrdered.ProductId, out var product))
+                {
+                    logger.LogWarning(
+                        "Could not restore stock for missing product {ProductId}",
+                        item.ItemOrdered.ProductId);
+
+                    continue;
+                }
+
+                product.QuantityInStock += item.Quantity;
+            }
+
+            order.Status = OrderStatus.PaymentFailed;
+
+            // Save product stock changes and order status together.
+            await unit.Complete();
         }
 
         private Event ConstructStripeEvent(string json)
@@ -123,7 +187,6 @@ namespace API.Controllers
 
                 await unit.Complete();
 
-                await unit.Complete();
 
                 // Guest orders get no push: a guest can type any email, so the lookup could hit another user's connection
                 if (!order.IsGuestOrder)
