@@ -6,7 +6,7 @@ import { Product } from '../../shared/models/product';
 import { firstValueFrom, map, tap } from 'rxjs';
 import { NotFound } from '../../shared/not-found/not-found';
 import { DeliveryMethod } from '../../shared/models/deliveryMethod';
-import { Snackbar } from './snackbar';
+import { MiniCartService } from './mini-cart-service';
 
 @Injectable({
   providedIn: 'root',
@@ -14,10 +14,11 @@ import { Snackbar } from './snackbar';
 export class CartService {
   baseUrl = environment.apiUrl
   private http = inject(HttpClient)
-  // Used only to fire the "X added to your cart" confirmation toast in addItemToCart().
-  // Safe to inject: Snackbar is providedIn 'root' and only depends on MatSnackBar, so
-  // there is no dependency cycle back to CartService.
-  private snackbar = inject(Snackbar)
+  // Used only to open the mini-cart drawer in addItemToCart() once the cart
+  // has synced with the API. Safe to inject: MiniCartService is providedIn
+  // 'root' and only depends on a signal — there is no dependency cycle back
+  // to CartService.
+  private miniCart = inject(MiniCartService)
   cart = signal<Cart | null>(null)
   
   itemCount = computed(() => { // COMPUTED SIGNAL — auto-updates whenever `cart` changes; drives the cart badge count.
@@ -85,18 +86,19 @@ export class CartService {
 //   4. addOrUpdateItem()      -> merges into cart.items (bump qty if exists,
 //                                 else push as new line)
 //   5. setCart()              -> POSTs updated cart to API, updates the signal
+//   6. miniCart.open()        -> slides in the basket drawer (the UI feedback
+//                                that the add worked)
 //
 // Key TS concept used: type guards (`item is Product`) let you safely
 // narrow a union type (CartItem | Product) at runtime, since TypeScript
 // types don't exist in compiled JavaScript.
 
-  async addItemToCart(item: CartItem | Product, quantity = 1) { //We need type of cartitem because product contains properties like  description and quantityinstock which wedont need 
+  // openMiniCart (default true): whether the slide-in basket drawer should pop
+  // open after the add. The +/- steppers on the FULL cart page pass false —
+  // opening a basket summary over the cart page itself would cover the very
+  // list the user is editing.
+  async addItemToCart(item: CartItem | Product, quantity = 1, openMiniCart = true) {
     const cart = this.cart() ?? this.createCart()
-
-    // Read the display name BEFORE the block below reassigns `item` to a CartItem.
-    // Needed for the confirmation toast, and the name has to come from whichever
-    // shape the caller passed: Product uses .name, CartItem uses .productName.
-    const productName = this.isProduct(item) ? item.name : item.productName
 
     if (this.isProduct(item)) {
       item = this.mapProductToCartItem(item)
@@ -104,11 +106,11 @@ export class CartService {
     cart.items = this.addOrUpdateItem(cart.items, item, quantity)
     await firstValueFrom(this.setCart(cart))
 
-    // Confirmed AFTER the await on purpose. setCart() POSTs to the API, so if that call
-    // fails the promise rejects, this line is never reached, and the user is never told
-    // an item was added when it was not. Showing the toast before the await would mean
-    // lying to the user every time the server is down.
-    this.snackbar.addedToCart(productName, quantity)
+    // Opened AFTER the await on purpose. setCart() POSTs to the API, so if that call
+    // fails the promise rejects, this line is never reached, and the user never sees
+    // a basket drawer for an item that was not actually added. Opening the drawer
+    // before the await would mean lying to the user every time the server is down.
+    if (openMiniCart) this.miniCart.open()
   }
   
 

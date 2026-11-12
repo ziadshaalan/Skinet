@@ -8,3 +8,13 @@
 <div class="container mt-20 lg:mt-24">
     <router-outlet></router-outlet>
 </div>
+
+<!--
+  MINI-CART DRAWER — rendered once here, at the ROOT of the app, on purpose:
+  "Add to cart" can be clicked from the shop grid OR from a product details
+  page, so the drawer has to exist on every route. It is position:fixed (see
+  mini-cart.css), so its DOM position here does not affect where it shows up
+  on screen — it lives here only so Angular keeps a single instance of it
+  alive for the whole session. Visibility is controlled by MiniCartService.
+-->
+<app-mini-cart></app-mini-cart>

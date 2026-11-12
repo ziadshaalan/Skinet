@@ -1,0 +1,156 @@
+<!--
+  MINI-CART DRAWER — template
+
+  Two elements, both always in the DOM (see mini-cart.css for why):
+    1. .mini-cart-backdrop — the dark overlay behind the drawer
+    2. .mini-cart-drawer   — the panel itself, full height, right quarter of the screen
+
+  [class.open] binds the service's signal straight to a CSS class, so the
+  slide/fade animations are driven purely by state — no manual DOM poking.
+-->
+
+<!-- 1. Backdrop: click anywhere on it to dismiss the drawer -->
+<div
+  class="mini-cart-backdrop"
+  [class.open]="miniCartService.isOpen()"
+  (click)="close()"
+  aria-hidden="true"
+></div>
+
+<!--
+  2. The drawer panel. flex flex-col = header / scrollable items / footer
+  stacked on top of each other; flex-1 on the items block is what lets the
+  footer stick to the bottom while the item list scrolls.
+
+  [attr.inert]: while closed, the panel is parked off-screen (translated
+  100% to the right) but still in the DOM — inert keeps it out of the tab
+  order and invisible to screen readers until it is actually open.
+-->
+<aside
+  class="mini-cart-drawer flex flex-col bg-white shadow-2xl"
+  [class.open]="miniCartService.isOpen()"
+  [attr.inert]="miniCartService.isOpen() ? null : ''"
+  role="dialog"
+  aria-label="Shopping basket summary"
+>
+  <!-- ── Header: title + the X close button (top right of the drawer) ── -->
+  <div class="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+    <h2 class="text-lg font-semibold">Your basket ({{ cartService.itemCount() }})</h2>
+    <button mat-icon-button (click)="close()" aria-label="Close basket">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- ── Items: picture, name, stepper, delete button, line price ── -->
+  <div class="flex-1 space-y-3 overflow-y-auto p-4">
+    <!-- itemCount() is CartService's computed "how many products are in the
+         basket" signal — truthy only when there is at least one item.
+         (cart()?.items.length is NOT used here: Angular's template type
+         checker treats the result of a safe-nav chain as possibly undefined,
+         unlike plain TypeScript, so it fails to compile.) -->
+    @if (cartService.itemCount()) {
+      <!-- track item.productId: reuse the DOM nodes when the signal updates,
+           so Angular re-renders only what changed instead of the whole list -->
+      @for (item of cartService.cart()?.items; track item.productId) {
+        <!--
+          One bordered card per product, two rows (the drawer is narrow, so a
+          single row with picture + name + stepper + price would overflow):
+            top row    = picture, name, red delete button
+            bottom row = - / qty / + stepper ... line total
+        -->
+        <div class="rounded-lg border border-gray-200 p-3">
+          <!-- ── Top row: picture, name + unit price, delete ── -->
+          <div class="flex items-center gap-3">
+            <!-- shrink-0: the image keeps its square shape instead of being
+                 squashed when a product name wraps to two lines -->
+            <img
+              class="h-16 w-16 shrink-0 rounded object-cover"
+              [src]="item.pictureUrl"
+              [alt]="item.productName"
+            />
+            <!-- min-w-0 lets the name truncate instead of pushing the delete
+                 button out of the card -->
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-medium">{{ item.productName }}</p>
+              <p class="text-sm text-gray-500">{{ item.price | currency }} each</p>
+            </div>
+            <!--
+              Red delete button — icon only (no "Delete" label) because the
+              drawer is a quarter of the screen wide. The trailing "!" on
+              text-red-700 is needed because Material's own button styles
+              (compiled with view encapsulation, specificity 0,2,0) beat a
+              plain Tailwind colour utility (0,1,0) — same trick as the delete
+              button on the full cart page. aria-label keeps it announced to
+              screen readers since there is no visible text.
+            -->
+            <button
+              mat-icon-button
+              class="text-red-700!"
+              (click)="removeItem(item)"
+              [attr.aria-label]="'Remove ' + item.productName + ' from basket'"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+
+          <!-- ── Bottom row: quantity stepper + line total ── -->
+          <div class="mt-2 flex items-center justify-between">
+            <!-- Same stepper as the cart page: red minus, quantity, green plus -->
+            <div class="flex items-center gap-1">
+              <button
+                mat-icon-button
+                (click)="decrement(item)"
+                [attr.aria-label]="'Decrease quantity of ' + item.productName"
+              >
+                <!-- text-red-600! / text-green-600!: the "!" outranks Material's
+                     icon colour styles — identical to cart-item.html -->
+                <mat-icon class="text-red-600!">remove</mat-icon>
+              </button>
+
+              <!-- w-8 (fixed 32px): keeps the stepper's width stable when the
+                   count goes from 1 to 2 digits (1 -> 10), so the line total
+                   beside it never jumps around -->
+              <span class="w-8 text-center font-semibold">{{ item.quantity }}</span>
+
+              <button
+                mat-icon-button
+                (click)="increment(item)"
+                [attr.aria-label]="'Increase quantity of ' + item.productName"
+              >
+                <mat-icon class="text-green-600!">add</mat-icon>
+              </button>
+            </div>
+
+            <!-- Line total (price x quantity) — the numbers that add up to
+                 the subtotal below -->
+            <p class="font-semibold">{{ item.price * item.quantity | currency }}</p>
+          </div>
+        </div>
+      }
+    } @else {
+      <!-- Reachable when the user deletes the last product with the stepper
+           or the red button — CartService then deletes the cart, the signal
+           goes null, and the drawer shows this instead of a blank panel -->
+      <p class="text-gray-500">Your basket is empty.</p>
+    }
+  </div>
+
+  <!-- ── Footer: subtotal + the two action buttons ── -->
+  <div class="space-y-3 border-t border-gray-200 p-4">
+    <div class="flex items-center justify-between">
+      <span class="text-gray-600">Subtotal</span>
+      <span class="text-lg font-bold">{{ subtotal() | currency }}</span>
+    </div>
+
+    <!-- Full width and stacked: at 25% of the screen there is no room for
+         these buttons side by side -->
+    <button mat-stroked-button class="w-full" (click)="continueShopping()">
+      <mat-icon>arrow_back</mat-icon>
+      Continue shopping
+    </button>
+    <button mat-flat-button class="w-full" (click)="viewBasket()">
+      <mat-icon>shopping_cart</mat-icon>
+      View your basket
+    </button>
+  </div>
+</aside>

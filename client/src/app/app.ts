@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Header } from "./layout/header/header";
+import { MiniCart } from './shared/components/mini-cart/mini-cart';
 import { Product } from './shared/models/product';
 import { HttpClient } from '@angular/common/http';
 import { Pagination } from './shared/models/pagination';
@@ -13,7 +14,7 @@ import { Shop } from './features/shop/shop';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Header,],
+  imports: [RouterOutlet, Header, MiniCart],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

@@ -25,6 +25,12 @@ export class Snackbar {
   /**
    * Lightweight, non-blocking confirmation toast.
    *
+   * NOTE: no longer called by CartService.addItemToCart() — the mini-cart
+   * drawer (shared/components/mini-cart) now slides open instead, which is
+   * strictly more feedback: it shows the item, the quantity AND the subtotal.
+   * Kept here in case the toast is wanted back (e.g. for a "quick add" that
+   * should NOT open the drawer).
+   *
    * Deliberately different in shape from error()/success():
    *  - no action button, so there is nothing for the user to click or dismiss
    *  - short duration, so it fades away on its own

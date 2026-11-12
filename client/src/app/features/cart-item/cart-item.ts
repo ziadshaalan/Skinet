@@ -25,7 +25,10 @@ export class CartItemComponent {
   item = input.required<CartItem>()
 
 incrementQuantity() {
-this.cartService.addItemToCart(this.item())
+  // openMiniCart=false: we are already ON the full cart page — popping the
+  // mini-cart drawer open here would cover the very list being edited.
+  // (From the shop grid / product details the default true applies.)
+  this.cartService.addItemToCart(this.item(), 1, false)
 }
 
 decrementQuantity() {

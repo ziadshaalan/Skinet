@@ -1,1 +1,0 @@
-import{d as n,f as a}from"./chunk-5LZGD42K.js";import{N as r,_b as o,n as e}from"./chunk-DISEZENX.js";var A=async(s,c)=>{let t=r(a),u=r(o),i=r(n);return t.currentUser()||await e(t.getUserInfo())?!0:(i.error("You are not authenticated, Please log in."),u.createUrlTree(["/account/login"],{queryParams:{returnUrl:c.url}}))};export{A as a};

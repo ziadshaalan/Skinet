@@ -1,0 +1,86 @@
+/*
+  MINI-CART DRAWER — slide-in animation.
+
+  WHY THIS IS IN CSS AND NOT TAILWIND CLASSES:
+  open/closed has to flip SEVERAL properties at once (transform, opacity,
+  pointer-events) as one unit, and the transition has to run on the change.
+  Doing that with one .open class + a transition on the base class keeps the
+  whole animation in a single place instead of scattered across the template.
+
+  WHY BOTH ELEMENTS ARE ALWAYS IN THE DOM:
+  the "closed" look is transform: translateX(100%) + opacity: 0, NOT @if.
+  If the elements were removed from the DOM with @if, there would be nothing
+  to animate — the drawer would just pop in/out with no slide. Keeping them
+  mounted lets the transition do the work in both directions (open AND
+  close). pointer-events: none is what makes the closed drawer untouchable.
+*/
+
+/* ── Backdrop: the dark overlay behind the drawer ── */
+.mini-cart-backdrop {
+  position: fixed;
+  inset: 0; /* shorthand for top/right/bottom/left: 0 — cover the viewport */
+  background: rgba(0, 0, 0, 0.4);
+
+  /* One above the fixed header (z-50 in header.html) so the drawer session
+     covers it; still far below Material's snackbars (z-index 1000+) so the
+     app keeps its layering conventions. */
+  z-index: 60;
+
+  /* CLOSED state: invisible AND untouchable, so the page behind stays
+     clickable while the drawer is dismissed */
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity 0.3s ease;
+}
+
+.mini-cart-backdrop.open {
+  opacity: 1;
+  pointer-events: auto; /* OPEN state: clickable, so (click) can dismiss it */
+}
+
+/* ── The drawer panel itself ── */
+.mini-cart-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+
+  /* Full height of the screen. dvh (dynamic viewport height) rather than
+     100vh so mobile browser toolbars don't cut the drawer's bottom off. */
+  height: 100dvh;
+
+  /* One layer above the backdrop so the panel sits ON the overlay. */
+  z-index: 61;
+
+  /* CLOSED state: parked fully off-screen to the right. translateX(100%)
+     moves it by its own width, so no magic pixel numbers are involved. */
+  transform: translateX(100%);
+
+  transition: transform 0.3s ease-out;
+}
+
+.mini-cart-drawer.open {
+  transform: translateX(0); /* slide into view */
+}
+
+/*
+  Width: a quarter of the screen on desktop, as requested. On phones that
+  25% would be ~94px — far too narrow for a product row — so the drawer is
+  full width on small screens and steps down as the screen grows.
+*/
+.mini-cart-drawer {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .mini-cart-drawer {
+    width: 50%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mini-cart-drawer {
+    width: 28%
+  }
+}
+  
