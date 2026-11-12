@@ -1,11 +1,31 @@
-<app-header></app-header>
 <!--
-  mt-20 / lg:mt-24 rather than mt-16 / lg:mt-20.
-  The header is fixed and is h-16 on phones, h-20 from lg up, so those values only
-  cleared the header exactly and left the first element butted up against it.
-  80 - 64 = 16px of breathing room on phones, 96 - 80 = 16px on desktop.
+  ===========================================================================
+  THE APP SHELL
+  ===========================================================================
+  Read this together with app.ts.
+
+  NORMAL PAGES (home, shop, cart, checkout, orders, admin):
+    header is visible, and the page sits inside `.container` with a top margin
+    that clears the fixed header.
+
+  ACCOUNT PAGES (/account/login and /account/register):
+    the header is hidden and the container/margins are removed. The page then
+    fills the viewport itself, which is what makes the hero6.jpg background
+    edge-to-edge with no white strip underneath.
+
+  The `@if` and `[class]` below are the only difference between the two layouts.
 -->
-<div class="container mt-20 lg:mt-24">
+
+@if (!isAuthPage()) {
+  <app-header></app-header>
+}
+
+<!--
+  [class] replaces the whole class attribute based on the route:
+    auth-outlet  -> 100dvh box, no header offset, no page scrolling
+    container... -> the usual centered page with `mt-20 lg:mt-24` below the header
+-->
+<div [class]="isAuthPage() ? 'auth-outlet' : 'container mt-20 lg:mt-24'">
     <router-outlet></router-outlet>
 </div>
 

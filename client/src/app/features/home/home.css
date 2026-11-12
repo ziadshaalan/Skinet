@@ -1,0 +1,221 @@
+/*
+  HOME HERO
+  ----------------------------------------------------------------------------
+  Full-bleed section that reuses the existing hero7.jpg wallpaper. The home route
+  is rendered inside app.html's `.container`, so the hero escapes that box with
+  100vw + a negative inline margin instead of a structural change to app.html.
+
+  `overflow-x: clip` on <body> (styles.css) trims the scrollbar-gutter sliver
+  that 100vw includes, so no horizontal scrollbar is created.
+
+  KEY UI TERMS USED BELOW:
+  - `position: relative` + `isolation: isolate`: the hero becomes the reference
+    box for its ::before overlay, and the overlay cannot leak above other pages.
+  - `z-index: 0 / 1`: the overlay sits at 0, the text at 1, so the text is on top.
+  - `background-size: cover`: fill the banner with the photo without stretching.
+  - `clamp(...)`: size scales with the screen but never goes below/above a limit.
+  - `@media (hover: hover)`: only run hover effects on devices with a real mouse.
+*/
+:host {
+  display: flow-root;
+}
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  /* Edge-to-edge, ignoring the centered .container that hosts this component. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+
+  /* app.html adds 16px of breathing room under the fixed header. The reference
+     hero sits directly beneath it, so pull the hero up by exactly that much. */
+  margin-top: -1rem;
+
+  /* hero7.jpg is 16:9, so a taller box shows far more of the wallpaper than
+     the old 370px panoramic strip. Caps at 520px on desktop, stays usable on
+     phones and tablets. */
+  height: clamp(340px, 32vw, 520px);
+
+  background-color: #dce8f4;
+  background-image: url('/images/hero7.jpg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+/* Subtle white wash on the left keeps the navy copy crisp without hiding the
+   mountain scenery on the right. */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(255, 255, 255, 0.9) 24%,
+    rgba(255, 255, 255, 0.55) 48%,
+    rgba(255, 255, 255, 0) 72%
+  );
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.hero__content {
+  max-width: 560px;
+  padding-right: 0.5rem;
+  animation: hero-rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.hero__title {
+  margin: 0 0 0.75rem;
+  font-family: 'Roboto', 'Segoe UI', system-ui, sans-serif;
+  font-size: clamp(2rem, 3.5vw + 1rem, 3.75rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  color: #0b1e3a;
+}
+
+.hero__title-accent {
+  color: #0963d8;
+}
+
+.hero__subtitle {
+  margin: 0 0 1.5rem;
+  font-size: clamp(1rem, 0.35vw + 0.9rem, 1.25rem);
+  font-weight: 500;
+  line-height: 1.5;
+  color: #40506a;
+}
+
+.hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: 999px;
+  background-color: #0963d8;
+  color: #fff;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-decoration: none;
+  box-shadow: 0 12px 26px -12px rgba(9, 99, 216, 0.8);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.hero__cta:hover {
+  background-color: #0752b5;
+  box-shadow: 0 16px 30px -12px rgba(9, 99, 216, 0.85);
+  transform: translateY(-1px);
+}
+
+.hero__cta:focus-visible {
+  outline: 3px solid rgba(9, 99, 216, 0.35);
+  outline-offset: 3px;
+}
+
+.hero__cta-arrow {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  transition: transform 0.2s ease;
+}
+
+.hero__cta:hover .hero__cta-arrow {
+  transform: translateX(3px);
+}
+
+/* Carousel indicators, pinned to the bottom-left of the hero and aligned with
+   the heading's left edge. */
+.hero__dots {
+  position: absolute;
+  bottom: 1.25rem;
+  left: 1rem;
+  display: flex;
+  gap: 0.55rem;
+}
+
+.hero__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background-color: #cbd5e1;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+.hero__dot--active {
+  background-color: #0963d8;
+  box-shadow: 0 0 0 3px rgba(9, 99, 216, 0.16);
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .hero__inner {
+    padding: 0 1.5rem;
+  }
+
+  .hero__dots {
+    left: 1.5rem;
+  }
+}
+
+/* On narrow screens the cover crop would push the skier outside the frame, so
+   bias the image to the right while keeping the text over the washed-out left. */
+@media (max-width: 1023px) {
+  .hero {
+    background-position: 72% center;
+  }
+}
+
+@media (max-width: 767px) {
+  .hero::before {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.97) 0%,
+      rgba(255, 255, 255, 0.92) 48%,
+      rgba(255, 255, 255, 0.6) 72%,
+      rgba(255, 255, 255, 0.18) 100%
+    );
+  }
+
+  .hero__content {
+    padding-right: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__content {
+    animation: none;
+  }
+
+  .hero__cta,
+  .hero__cta-arrow {
+    transition: none;
+  }
+}

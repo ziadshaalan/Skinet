@@ -3,6 +3,21 @@
 <!-- [value]="brand" → what gets stored when option is checked -->
 
 
+<!--
+  ===========================================================================
+  FILTERS DIALOG — BRANDS AND TYPES
+  ===========================================================================
+  This template is opened as a Material dialog from the shop page. It receives
+  the shop's current selections through `data`, edits local copies, and returns
+  them when "Apply Filters" is pressed.
+
+  `[(ngModel)]` with `[multiple]="true"` means the selection list writes an
+  ARRAY of chosen values, which is exactly the shape the shop expects.
+  `[value]="brand"` decides what goes into that array (the brand name itself).
+
+  The dialog is not a route: it overlays the shop, so closing it returns the
+  user to the grid they were already looking at.
+-->
 <div>
     <h3 class="text-3xl text-center pt-6 mb-3">Filters</h3>
     <mat-divider></mat-divider>

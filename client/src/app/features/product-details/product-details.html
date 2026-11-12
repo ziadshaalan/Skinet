@@ -1,3 +1,22 @@
+<!--
+  ===========================================================================
+  PRODUCT DETAILS — IMAGE + BUY BOX
+  ===========================================================================
+  The page is one responsive grid:
+    - phones:    one column (image, then details)
+    - lg and up: two columns (image left, details right)
+
+  UI CONCEPTS USED BELOW:
+  - `rounded-lg overflow-hidden` rounds the image frame and clips the image to it.
+  - `[(ngModel)]` is Angular two-way binding: the quantity input writes to the
+    component, and the component writes back into the input.
+  - `[disabled]` is one-way binding: the button is disabled while the requested
+    quantity already matches what is in the cart.
+  - `| currency` is a pipe: it formats the number as money for the user's locale.
+  - `mat-divider` is a thin Material line used as a visual separator.
+  - `aria-label` / visible button text matters: icon-only controls still need a
+    name for screen readers.
+-->
 @if (product) {
     <section class="py-8">
         <div class="max-w-[1536px] px-4 mx-auto">

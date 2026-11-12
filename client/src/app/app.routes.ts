@@ -16,6 +16,19 @@ import { orderCompleteGuard } from './core/guards/order-complete-guard';
 import { Admin } from './features/admin/admin';
 import { adminGuard } from './core/guards/admin-guard';
 
+// #region How routing works
+// Each object maps a URL path to the component that should be drawn inside
+// app.html's <router-outlet>. The order matters: Angular uses the FIRST match.
+//
+// - `component` / direct import: the page is part of the initial JS bundle.
+// - `loadChildren` with a dynamic import: a LAZY route. Its JS is downloaded
+//   only when the user actually opens that area (checkout, orders, account,
+//   admin). This keeps the first load small.
+// - `canActivate`: guard functions that can block a route (auth, admin, empty
+//   cart, completed order, ...). They redirect instead of showing forbidden UI.
+// - `**`: the fallback for every URL that matched nothing above.
+// #endregion
+
 export const routes: Routes = [
     { path: '', component: Home },
     { path: 'shop', component: Shop },

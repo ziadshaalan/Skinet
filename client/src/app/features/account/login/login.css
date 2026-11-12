@@ -1,0 +1,203 @@
+/*
+  ACCOUNT PAGE BACKDROP
+  ----------------------------------------------------------------------------
+  hero6.jpg runs edge to edge behind the sign-in / sign-up form.
+
+  The header is hidden for this route (see app.ts / app.html), so the page owns
+  the whole window: height: 100dvh, no top offset, no white page underneath.
+
+  The overlay is intentionally a deep navy rather than black: it calms a bright
+  photograph and guarantees contrast for the white copy without flattening the
+  scenery. The gradient is darker on the left (where the text sits) and lighter
+  on the right (where the card covers most of the image anyway).
+*/
+:host {
+  display: block;
+  height: 100%;
+}
+
+.auth-page {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-start;
+
+  /* The page itself fills the viewport exactly. dvh (dynamic viewport height)
+     is used instead of vh because mobile browser toolbars change the usable
+     height; vh would leave a strip of white below the photo. */
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  margin: 0;
+
+  /* If the form is taller than the screen, THE FORM AREA scrolls inside the
+     photo. The body/page never scrolls, so the white page background can never
+     appear beneath the image. `overscroll-behavior` stops the scroll from
+     "chaining" out to the document when it reaches the end. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  padding: clamp(2rem, 5vw, 4.5rem) clamp(1rem, 4vw, 3rem);
+
+  background-color: #0b1e3a;
+  background-image: url('/images/hero6.jpg');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+}
+
+/* A cool navy wash + a soft blue glow from the top right. Roughly 55-75% dark,
+   so the image still reads as a photograph while white text stays crisp. */
+.auth-page__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 120% at 82% 12%, rgba(9, 99, 216, 0.24), transparent 58%),
+    linear-gradient(
+      115deg,
+      rgba(3, 16, 34, 0.8) 0%,
+      rgba(5, 24, 48, 0.62) 46%,
+      rgba(4, 18, 38, 0.4) 100%
+    );
+}
+
+.auth-page__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-items: center;
+  gap: 2.5rem;
+  width: 100%;
+  max-width: 1180px;
+  /* margin:auto (rather than align-items:center) keeps a tall form scrollable:
+     when there is free space it centres the grid, and when there is not it
+     falls back to 0 so the top of the form never gets clipped. */
+  margin: auto;
+}
+
+/* The card is the hero of the page: slightly translucent, softly blurred, and
+   lifted off the photograph with a deep shadow. */
+.auth-card {
+  width: 100%;
+  max-width: 32rem;
+  justify-self: center;
+  border-radius: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.96);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 32px 70px -34px rgba(2, 12, 27, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.28);
+}
+
+/* ---- Left-hand invitation (desktop / large tablet only) ------------------ */
+.auth-page__intro {
+  display: none;
+  max-width: 34rem;
+  color: #fff;
+  text-shadow: 0 2px 18px rgba(2, 12, 27, 0.35);
+}
+
+.auth-page__eyebrow {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #bfdbfe;
+}
+
+.auth-page__headline {
+  margin: 0;
+  font-size: clamp(2.75rem, 4.4vw, 4.25rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.auth-page__headline span {
+  color: #7dd3fc;
+}
+
+.auth-page__lede {
+  max-width: 27rem;
+  margin: 1.5rem 0 0;
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+.auth-page__points {
+  display: grid;
+  gap: 0.75rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+  color: rgba(241, 245, 249, 0.95);
+}
+
+.auth-page__points li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* A small, bright check mark drawn with CSS - no extra icon font request. */
+.auth-page__points li::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background-color: rgba(125, 211, 252, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(125, 211, 252, 0.65);
+}
+
+@media (min-width: 1024px) {
+  .auth-page__inner {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 460px);
+    gap: clamp(3rem, 6vw, 6rem);
+  }
+
+  .auth-page__intro {
+    display: block;
+  }
+
+  .auth-card {
+    justify-self: end;
+  }
+}
+
+/* On phones the photograph stays as a quiet frame around the form; the copy is
+   hidden so the sign-up card is the first and only focal point. */
+@media (max-width: 1023px) {
+  .auth-page {
+    background-position: 62% center;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-card {
+    border-radius: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .auth-card {
+    animation: auth-card-in 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+}
+
+@keyframes auth-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

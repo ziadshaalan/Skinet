@@ -1,3 +1,23 @@
+<!--
+  ===========================================================================
+  ORDER SUMMARY — SHARED BY CART AND CHECKOUT
+  ===========================================================================
+  This card is a shared component, so the cart and the checkout show exactly
+  the same maths and the same voucher UI. The numbers are not calculated here:
+  `cartService.totals()` is a computed signal that already knows the latest
+  server response.
+
+  THE CONDITIONAL BUTTONS:
+  `location.path() !== '/checkout'` means "show the Checkout/Continue buttons on
+  the cart page, but not on the checkout page itself" — a Checkout button inside
+  checkout would be circular.
+
+  THE VOUCHER FORM:
+  - `#form="ngForm"` is a template reference to the form.
+  - `[(ngModel)]` keeps the typed code in sync.
+  - once a coupon is applied, the input and Apply button are disabled and a
+    delete button appears, so the user cannot apply two codes at once.
+-->
 <div class="mx-auto max-w-4xl flex-1 space-y-6 w-full">
   <div class="space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
     <p class="text-xl font-semibold">Order summary</p>

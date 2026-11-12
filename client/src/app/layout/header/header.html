@@ -1,19 +1,40 @@
 <!--
+  ===========================================================================
+  HEADER — FIXED, RESPONSIVE NAVIGATION
+  ===========================================================================
+  This is the bar you see on every normal page. It is NOT part of each page:
+  it lives once in app.html so it never reloads while you navigate.
+
+  THE BIG IDEAS:
+  - `fixed top-0 z-50` glues the bar to the viewport and stacks it above the
+    page content. app.html adds a matching top margin to the page container so
+    the first element is not hidden underneath it.
+  - Mobile-first: the default classes describe the phone layout (h-16, compact
+    buttons, hamburger menu). The `lg:` classes add the desktop version (h-20,
+    full navigation, email menu). A breakpoint is just a minimum screen width.
+  - `<mat-menu>` is a Material overlay panel. `[matMenuTriggerFor]="menuName"`
+    on a button opens the menu with that template reference.
+  - `routerLink` lets Angular navigate without a full page reload.
+    `routerLinkActive="active"` adds a class to the current link; header.css
+    colours that class.
+  - `*appIsAdmin` is a custom structural directive: the Admin link is only added
+    to the DOM for admins.
+  - `matBadge` shows the cart item count. The badge is positioned absolutely
+    over the cart icon; `.custom-badge` in header.css controls its size.
+
+  WHY SOME MATERIAL BUTTONS HAVE A WRAPPER <div>:
+  Material's compiled styles are more specific than a plain Tailwind `hidden`
+  class, so hiding the Material button directly can fail. The plain wrapper div
+  has no Material styles, so `hidden lg:flex` on the wrapper always works.
+-->
+
+<!--
   Responsive header.
 
-  Two things to know about this file:
-
-  1. The header now owns its height (h-16 on phones, h-20 from lg up) and the loading
-     bar is absolutely positioned against the header's bottom edge. That removes the
-     old `fixed top-20` magic number, which broke the moment the header height changed
-     per breakpoint. app.html only needs `mt-16 lg:mt-20` to clear it.
-
-  2. Material components are wrapped in a plain <div> whenever they need to be shown or
-     hidden at a breakpoint. This is deliberate: Material's own styles are compiled with
-     Angular's view encapsulation (`.mat-mdc-button[_ngcontent-abc]`, specificity 0,2,0)
-     which BEATS Tailwind's single-class utilities like `hidden` (0,1,0). A bare
-     `class="hidden lg:flex"` on a <button mat-button> would simply not work — the
-     wrapper div has no Material styles on it, so `hidden` applies normally.
+  The header owns its own height (h-16 on phones, h-20 from lg up) and the
+  loading bar is absolutely positioned against its bottom edge. That removes the
+  old `fixed top-20` magic number, which broke as soon as the header height
+  changed per breakpoint. app.html only needs `mt-20 lg:mt-24` to clear it.
 -->
 <header class="fixed top-0 z-50 w-full bg-white shadow-md">
   <div class="mx-auto flex h-16 max-w-[1536px] items-center justify-between gap-2 px-4 lg:h-20 lg:px-6">

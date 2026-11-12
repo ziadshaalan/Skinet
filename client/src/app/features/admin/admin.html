@@ -1,3 +1,19 @@
+<!--
+  ===========================================================================
+  ADMIN — TABBED BACK OFFICE
+  ===========================================================================
+  <mat-tab-group> is Material's tab component. Only the active tab's content is
+  visible, which keeps the screen from showing three dense tables at once.
+
+  Each tab is a separate child component:
+    - app-admin-orders  -> customer orders table
+    - app-admin-catalog -> products table, create/edit/delete dialogs
+    - Customer service  -> placeholder for a future feature
+
+  `min-h-screen` gives the page a full-height white area behind the tabs. The
+  admin route is lazy-loaded and guarded in app.routes.ts, so this code is only
+  downloaded for an authenticated admin.
+-->
 <div class="min-h-screen">
   <mat-tab-group class="bg-white">
       <mat-tab label="Orders">

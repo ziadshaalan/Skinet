@@ -1,3 +1,30 @@
+<!--
+  ===========================================================================
+  SHOP PAGE — SEARCH, FILTERS, SORT AND THE PRODUCT GRID
+  ===========================================================================
+  Read this with shop.ts.
+
+  THE LAYOUT:
+  - `flex flex-col gap-3 lg:flex-row`: on phones the toolbar controls stack;
+    from `lg` up they sit in one row (paginator left, search centre, buttons right).
+  - the product area is a CSS grid: 2 columns on phones, then 3 / 4 / 5 as the
+    screen gets wider. Grid keeps every row aligned automatically.
+  - each cell is one <app-product-item>, which receives its product through
+    `[product]="product"`.
+
+  THE CONTROLS:
+  - search: `(ngModelChange)` fires on every keystroke; shop.ts debounces those
+    keystrokes so the API is not called 20 times for a 20-letter search.
+  - filters: opens a Material dialog. The dialog returns the chosen brands and
+    types, then the shop reloads page 1.
+  - sort: a Material menu linked to the button with `[matMenuTriggerFor]`.
+    `[selected]` pre-highlights the option that is currently active.
+
+  WHY THE EMPTY STATE IS SEPARATE:
+  `@if (products.count > 0)` keeps the toolbar hidden when there is nothing to
+  show; the visitor sees one clear "No products match this filter" action instead
+  of a broken-looking empty grid.
+-->
 @if (products && products.count > 0) {
 <div class="flex flex-col gap-3">
   <!--

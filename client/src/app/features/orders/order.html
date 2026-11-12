@@ -1,4 +1,16 @@
 <!-- mt-32 removed: app.html already offsets for the fixed header. -->
+<!--
+  ===========================================================================
+  ORDER HISTORY — RESPONSIVE TABLE
+  ===========================================================================
+  A plain HTML table is used because the data is genuinely tabular (order id,
+  date, total, status). Two UI details make it work on phones:
+  - the table has `min-w-full`, so columns keep their natural width;
+  - its wrapper has `overflow-x-auto`, so ONLY the table scrolls sideways.
+    Without that wrapper, the whole page would scroll horizontally.
+  `hover:bg-gray-100` on each row plus `cursor-pointer` signals that the row is
+  clickable; the actual navigation is the `routerLink` on the <tr>.
+-->
 <div class="mx-auto">
    <h2 class="font-semibold text-2xl mb-6 text-center">My orders</h2>
    <div class="flex flex-col">

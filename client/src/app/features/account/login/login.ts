@@ -24,6 +24,11 @@ import { AuthForm } from '../../../shared/components/auth-form/auth-form';
 // The card only provides the frame - the form itself is the shared
 // <app-auth-form>, which also decides whether the user signs in or registers.
 //
+// The page is full-bleed: hero6.jpg sits behind the card under a controlled
+// navy wash (see login.css). The overlay is darker on the side with the copy
+// and lighter on the side of the card, so the photograph stays visible without
+// ever competing with the form. On phones the card is the only focal point.
+//
 // WHY THIS TEXT LIVES HERE AND NOT IN login.html: it used to be a <details> box
 // in the template, which meant every visitor of the sign-in page saw a
 // "How this page works" button. The explanation belongs to the source, not to

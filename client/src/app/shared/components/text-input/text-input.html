@@ -1,3 +1,23 @@
+<!--
+  ===========================================================================
+  SHARED TEXT INPUT — ONE WRAPPER FOR EVERY FORM FIELD
+  ===========================================================================
+  Instead of repeating Material's <mat-form-field> markup in every form, forms
+  use <app-text-input label="Email" formControlName="email" />.
+
+  WHY `[formControl]="control"`:
+  This component does not own the value. The parent form owns it; this wrapper
+  only receives the control and displays it. That is what makes
+  `formControlName="email"` work in the parent.
+
+  THE PASSWORD EYE:
+  The input's `type` is switched between password/text; the icon changes too.
+  `matSuffix` places the button inside the field on the right.
+
+  THE <mat-error> BLOCKS:
+  They only appear when the control has that specific error, so the user is told
+  exactly what is wrong instead of a generic red border.
+-->
 <mat-form-field appearance="outline" class="w-full mb-3">
     <mat-label>{{label}}</mat-label>
 

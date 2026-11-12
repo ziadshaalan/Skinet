@@ -4,6 +4,26 @@
 // components according to the Material 3 design spec.
 // Learn more about theming and how to use it for your application's
 // custom components at https://material.angular.dev/guide/theming
+/*
+  ===========================================================================
+  MATERIAL THEME
+  ===========================================================================
+  Angular Material 3 is themed once here, at the root. It produces a set of CSS
+  variables such as --mat-sys-primary and --mat-sys-surface; the rest of the app
+  reads those variables instead of hard-coding brand colours.
+
+  THE PIECES:
+  - `mat.theme(...)` chooses the palette and typography for all Material
+    components (buttons, cards, menus, steppers, ...).
+  - `mat.button-overrides(...)` changes component-specific defaults, here the
+    corner radius of filled and outlined buttons.
+  - `:root` is the <html> element, so these overrides apply everywhere.
+  - `.snack-error` / `.snack-success` / `.snack-notice` are custom classes used
+    when a snackbar is opened; they only change that one toast, not every toast.
+
+  DO NOT add page layout rules here. Layout belongs to the component styles so
+  it stays next to the markup it describes.
+*/
 @use '@angular/material' as mat;
 
 // Customize the entire app. Change :root to your selector if you want to scope the styles.

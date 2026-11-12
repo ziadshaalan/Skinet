@@ -1,3 +1,21 @@
+<!--
+  ===========================================================================
+  CART PAGE — ITEM LIST + ORDER SUMMARY
+  ===========================================================================
+  One responsive flex layout:
+    - desktop: items take 3/4 of the row, the summary card 1/4
+    - phones:  the two blocks stack, because 25% of 375px is unusably narrow
+
+  `cartService.cart()` is a signal. Angular re-renders this block automatically
+  whenever the cart changes, which is why there is no manual "refresh" call here.
+
+  `@for (...; track item.productId)` tells Angular how to identify each row.
+  Tracking by product id means a quantity change updates the existing row
+  instead of rebuilding the whole list.
+
+  If there is no cart, the shared empty-state component shows one clear action
+  ("Go to shop") instead of an empty white area.
+-->
 <section>
     @if (cartService.cart()) {
         <!-- mt-32 removed: app.html already offsets for the fixed header, so the two

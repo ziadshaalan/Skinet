@@ -1,4 +1,25 @@
 <!-- mt-32 removed: app.html already offsets for the fixed header. -->
+<!--
+  ===========================================================================
+  CHECKOUT — FOUR-STEP WIZARD
+  ===========================================================================
+  Material's <mat-stepper> is the whole flow:
+    Address -> Shipping -> Payment -> Confirmation
+
+  IMPORTANT UI TERMS:
+  - `[linear]="true"` means the user cannot jump ahead until the current step is
+    complete. Each step's `[completed]` binding is what unlocks the next one.
+  - `[orientation]` is responsive: horizontal on wide screens, vertical on phones.
+  - `#stepper` is a template reference variable. It gives the TypeScript class a
+    handle on this stepper, so confirmPayment(stepper) can move it after payment.
+  - `<div id="address-element">` and `<div id="payment-element">` are empty boxes
+    on purpose. Stripe's JavaScript mounts its own card/address form inside them;
+    we never write those fields ourselves.
+
+  LAYOUT:
+  The 3/4 + 1/4 row is the same pattern as the cart page. On phones both blocks
+  stack, so the order summary stays readable.
+-->
 <div class="flex flex-col gap-6 lg:flex-row">
     <div class="w-full lg:w-3/4">
         <mat-stepper 

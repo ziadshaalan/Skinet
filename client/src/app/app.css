@@ -1,0 +1,21 @@
+/*
+  THE TWO PAGE FRAMES
+  ----------------------------------------------------------------------------
+  Normal pages use .container from src/styles.css (centered, max 1536px,
+  horizontal padding). This file only adds the full-screen account frame.
+
+  WHY .auth-outlet EXISTS:
+  Once the header is hidden, the page has to fill the whole window. Height is
+  set on the wrapper so the page cannot accidentally add a few pixels of
+  scrollable body below the background image.
+
+  overflow: hidden is NOT a trap on the auth page: the page inside
+  (login.css, .auth-page) is its own scroll container. If the sign-up form is
+  taller than a short laptop/mobile screen, the form scrolls inside the photo,
+  never the white page behind it.
+*/
+.auth-outlet {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}

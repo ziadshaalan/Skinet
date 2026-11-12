@@ -22,6 +22,10 @@ import { ResetPassword } from "./reset-password/reset-password";
 // #endregion
 /** The pages of the "account" area. */
 export const accountRoutes: Route[] = [
+    // Opening /account lands on the account page instead of a 404. That page is
+    // the sign-up entry point too (email-first), so it is the first screen a
+    // new member sees.
+    { path: '', redirectTo: 'login', pathMatch: 'full' },
     { path: 'login', component: Login },
     { path: 'register', redirectTo: 'login', pathMatch: 'full' },
     { path: 'forgot-password', component: ForgotPassword },

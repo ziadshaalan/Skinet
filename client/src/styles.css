@@ -1,6 +1,34 @@
 /* You can add global styles to this file, and also import other style files */
 
+/*
+  ===========================================================================
+  GLOBAL STYLES — THE RULES THAT ARE SHARED BY EVERY COMPONENT
+  ===========================================================================
+  Most styling lives inside its component (login.css, shop.css, ...). This file
+  is only for things a component stylesheet cannot reach:
+
+  1. Tailwind itself (`@import "tailwindcss"`), plus the global `.container`.
+  2. Material's internal DOM (the paginator, snackbar surface, button label).
+     Angular's view encapsulation stops a component's CSS from styling the
+     inside of a Material component, so those overrides must be global.
+  3. Cross-component helpers such as `.rule-icon`, used by BOTH the sign-up
+     checklist and the reset-password checklist.
+
+  WHY SOME SELECTORS HAVE TWO CLASSES:
+  Angular Material's own styles are global and may have the same specificity.
+  A selector such as `.mat-icon.rule-icon` is more specific (0,2,0 vs 0,1,0),
+  so it wins without needing !important.
+*/
 @import "tailwindcss";
+
+/* The home hero uses `100vw` to escape the centered container and go edge-to-edge.
+   `100vw` includes the scrollbar gutter reserved by `scrollbar-gutter: stable`
+   (see material-theme.scss), which would otherwise create a horizontal scrollbar.
+   `clip` trims that sliver without turning the page into a scroll container. */
+body {
+    overflow-x: clip;
+}
+
 /* Overriding the default container class with custom padding, centering and a max width.
    NOTE: the old `max-w-screen-2xl` utility was removed in Tailwind v4, so it silently
    generated no CSS. `max-w-[1536px]` is the v4 equivalent (--breakpoint-2xl).
